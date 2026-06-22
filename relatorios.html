@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relatórios – Sistema de Conciliação Bancária</title>
+  <meta name="description" content="Gere e exporte relatórios de conciliação bancária em Excel e PDF.">
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" integrity="sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" integrity="sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.31/dist/jspdf.plugin.autotable.min.js" integrity="sha384-vuyrTV5nkscLp1knFvt+FIHfKKzmROBq5reruhMRslauj54mW+l2B8b6szMN6lCL" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="toast-container" class="toast-container"></div>
+
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 7H6a2 2 0 00-2 2v9a2 2 0 002 2h9a2 2 0 002-2v-3M9 7h9m-9 0V4a1 1 0 011-1h7a1 1 0 011 1v3M9 12h6m-6 4h3"/></svg>
+      </div>
+      <div class="sidebar-logo-text">
+        <h1>CONCILIAÇÃO</h1>
+        <span>Bancária Inteligente</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Principal</div>
+      <a href="dashboard.html" class="nav-item"><svg class="nav-item-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg><span class="nav-item-label">Dashboard</span></a>
+      <a href="conciliacao.html" class="nav-item" data-role="analista"><svg class="nav-item-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg><span class="nav-item-label">Conciliação</span></a>
+      <a href="relatorios.html" class="nav-item active"><svg class="nav-item-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><span class="nav-item-label">Relatórios</span></a>
+      <div class="sidebar-section-label" style="margin-top:var(--space-3)" data-role="admin">Administração</div>
+      <a href="usuarios.html" class="nav-item" data-role="admin"><svg class="nav-item-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span class="nav-item-label">Usuários</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar">AD</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name">Administrador</div>
+          <div class="sidebar-user-role">Administrador</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-content" id="main-content">
+    <header class="header">
+      <button class="header-toggle" id="sidebar-toggle"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+      <div class="header-breadcrumb">
+        <span>Sistema</span><span class="header-breadcrumb-sep">›</span>
+        <span class="header-breadcrumb-current">Relatórios</span>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-ghost btn-icon btn-sm logout-btn">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <div class="page-header animate-slide-up">
+        <div>
+          <h1 class="page-title">Relatórios</h1>
+          <p class="page-subtitle">Histórico de conciliações e exportação de dados</p>
+        </div>
+        <div class="flex gap-3">
+          <button class="btn btn-success" id="btn-export-excel" disabled>
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Exportar Excel
+          </button>
+          <button class="btn btn-primary" id="btn-export-pdf" disabled>
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+            Exportar PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- Sessions list -->
+      <div class="chart-card animate-slide-up" style="margin-bottom:var(--space-6)">
+        <div class="section-header">
+          <span class="section-title">Histórico de Conciliações</span>
+          <span class="text-xs text-muted" id="sessions-count">0 sessões</span>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="table" id="sessions-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Data / Hora</th>
+                <th>Arquivo Banco</th>
+                <th>Arquivo Sistema</th>
+                <th>Total</th>
+                <th>Conciliado</th>
+                <th>Pendente</th>
+                <th>%</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="sessions-tbody">
+              <tr>
+                <td colspan="9" style="text-align:center;padding:40px">
+                  <div class="empty-state">
+                    <div class="empty-state-icon">
+                      <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    </div>
+                    <p class="empty-state-title">Nenhuma conciliação realizada</p>
+                    <p class="empty-state-desc">Acesse a página de Conciliação para processar seus arquivos.</p>
+                    <a href="conciliacao.html" class="btn btn-primary" style="margin-top:var(--space-4)">Nova Conciliação</a>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Selected session details -->
+      <div id="session-details" style="display:none" class="animate-slide-up">
+        <div class="section-header" style="margin-bottom:var(--space-5)">
+          <span class="section-title">Detalhes da Conciliação Selecionada</span>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('session-details').style.display='none'">Fechar</button>
+        </div>
+
+        <!-- Mini KPI row -->
+        <div class="grid grid-cols-4 gap-4" style="margin-bottom:var(--space-6)" id="detail-kpis"></div>
+
+        <div class="data-table-container">
+          <div class="data-table-toolbar">
+            <span class="data-table-title">Resultados</span>
+            <div class="search-input-wrap">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              <input type="text" id="detail-search" placeholder="Buscar...">
+            </div>
+            <select class="input" id="detail-status-filter" style="max-width:200px">
+              <option value="">Todos os status</option>
+              <option value="CONCILIADO">Conciliado</option>
+              <option value="CONCILIADO_DATA">Div. Data</option>
+              <option value="PROVAVEL">Provável</option>
+              <option value="DIV_VALOR">Div. Valor</option>
+              <option value="NAO_REGISTRADO">Não Registrado</option>
+              <option value="NAO_COMPENSADO">Não Compensado</option>
+              <option value="DUPLICIDADE">Duplicidade</option>
+            </select>
+          </div>
+          <div class="table-wrapper" style="max-height:480px">
+            <table class="table" id="detail-table">
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Data Banco</th>
+                  <th>Valor Banco</th>
+                  <th>Desc. Banco</th>
+                  <th>Data Sistema</th>
+                  <th>Valor Sistema</th>
+                  <th>Desc. Sistema</th>
+                  <th>Observação</th>
+                </tr>
+              </thead>
+              <tbody id="detail-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="js/storage.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/normalizer.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/reports.js"></script>
+<script src="js/app.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const session = AUTH.requireAuth();
+  if (!session) return;
+
+  let selectedSession = null;
+  const sessions = STORAGE.getSessions();
+
+  document.getElementById('sessions-count').textContent = sessions.length + ' sessão(ões)';
+
+  const tbody = document.getElementById('sessions-tbody');
+  if (sessions.length > 0) {
+    tbody.innerHTML = '';
+    sessions.forEach((s, i) => {
+      const dt = new Date(s.createdAt);
+      const pct = s.summary?.percentual || 0;
+      const pctColor = pct >= 80 ? 'var(--success)' : pct >= 50 ? 'var(--warning)' : 'var(--danger)';
+      const tr = document.createElement('tr');
+      tr.style.cursor = 'pointer';
+      tr.innerHTML = `
+        <td><input type="radio" name="session-select" class="session-radio" value="${s.id}"></td>
+        <td style="white-space:nowrap;font-size:0.8rem">
+          <div style="font-weight:600">${dt.toLocaleDateString('pt-BR')}</div>
+          <div style="color:var(--text-muted)">${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+        </td>
+        <td style="font-size:0.8rem">${escapeHTML(s.bankData?.fileName || '—')}</td>
+        <td style="font-size:0.8rem">${escapeHTML(s.systemData?.fileName || '—')}</td>
+        <td style="font-weight:700">${s.summary?.total || 0}</td>
+        <td style="font-weight:700;color:var(--success)">${(s.summary?.conciliado || 0) + (s.summary?.conciliadoData || 0)}</td>
+        <td style="font-weight:700;color:var(--warning)">${(s.summary?.naoRegistrado || 0) + (s.summary?.naoCompensado || 0)}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="flex:1;height:6px;background:var(--border-subtle);border-radius:99px;min-width:50px;overflow:hidden">
+              <div style="height:100%;width:${pct}%;background:${pctColor};border-radius:99px"></div>
+            </div>
+            <span style="font-size:0.8rem;font-weight:700;color:${pctColor}">${pct}%</span>
+          </div>
+        </td>
+        <td>
+          <div class="flex gap-2">
+            <button class="btn btn-secondary btn-sm" onclick="viewSession('${s.id}')">
+              <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              Ver
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="deleteSession('${s.id}')">
+              <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </button>
+          </div>
+        </td>
+      `;
+      tr.addEventListener('click', () => {
+        tr.querySelector('.session-radio').checked = true;
+        selectSession(s.id);
+      });
+      tbody.appendChild(tr);
+    });
+  }
+
+  function selectSession(id) {
+    selectedSession = STORAGE.getSession(id);
+    if (!selectedSession) return;
+    document.getElementById('btn-export-excel').disabled = false;
+    document.getElementById('btn-export-pdf').disabled   = false;
+  }
+
+  window.viewSession = function(id) {
+    const s = STORAGE.getSession(id);
+    if (!s || !s.results) { APP.toast('Dados não disponíveis.', 'warning'); return; }
+    selectedSession = s;
+
+    document.getElementById('btn-export-excel').disabled = false;
+    document.getElementById('btn-export-pdf').disabled   = false;
+
+    // KPI mini cards
+    const kpiEl = document.getElementById('detail-kpis');
+    const kpis = [
+      { label: 'Total', value: s.summary.total, color: 'var(--brand-primary)' },
+      { label: 'Conciliado', value: (s.summary.conciliado||0)+(s.summary.conciliadoData||0), color: 'var(--success)' },
+      { label: 'Pendente', value: (s.summary.naoRegistrado||0)+(s.summary.naoCompensado||0), color: 'var(--warning)' },
+      { label: '% Conciliado', value: s.summary.percentual + '%', color: s.summary.percentual >= 80 ? 'var(--success)' : 'var(--warning)' },
+    ];
+    kpiEl.innerHTML = kpis.map(k => `
+      <div class="card card-sm" style="text-align:center">
+        <div style="font-size:1.5rem;font-weight:800;color:${k.color}">${k.value}</div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">${k.label}</div>
+      </div>
+    `).join('');
+
+    document.getElementById('session-details').style.display = 'block';
+    renderDetailTable(s.results);
+    document.getElementById('session-details').scrollIntoView({ behavior: 'smooth' });
+  };
+
+  function renderDetailTable(results) {
+    const search = document.getElementById('detail-search')?.value?.toLowerCase() || '';
+    const statusF = document.getElementById('detail-status-filter')?.value || '';
+
+    let filtered = results;
+    if (statusF) filtered = filtered.filter(r => r.status === statusF);
+    if (search) filtered = filtered.filter(r =>
+      (r.bankRow?.desc || '').toLowerCase().includes(search) ||
+      (r.systemRow?.desc || '').toLowerCase().includes(search)
+    );
+
+    const statusBadges = {
+      CONCILIADO:      '<span class="badge badge-success badge-dot">Conciliado</span>',
+      CONCILIADO_DATA: '<span class="badge badge-warning badge-dot">Div. Data</span>',
+      PROVAVEL:        '<span class="badge badge-brand badge-dot">Provável</span>',
+      DIV_VALOR:       '<span class="badge badge-pending badge-dot">Div. Valor</span>',
+      NAO_REGISTRADO:  '<span class="badge badge-danger badge-dot">Não Registrado</span>',
+      NAO_COMPENSADO:  '<span class="badge badge-info badge-dot">Não Comp.</span>',
+      DUPLICIDADE:     '<span class="badge badge-secondary badge-dot">Duplicidade</span>',
+    };
+
+    document.getElementById('detail-tbody').innerHTML = filtered.slice(0, 100).map(r => `
+      <tr>
+        <td>${statusBadges[r.status] || r.status}</td>
+        <td style="font-size:0.8rem;white-space:nowrap">${NORMALIZER.formatDateBR(r.bankRow?.date) || '—'}</td>
+        <td style="font-size:0.85rem;font-weight:600;text-align:right;white-space:nowrap;${r.bankRow?.value < 0 ? 'color:var(--danger)' : 'color:var(--success)'}">
+          ${r.bankRow?.value !== null && r.bankRow?.value !== undefined ? NORMALIZER.formatCurrency(r.bankRow.value) : '—'}
+        </td>
+        <td style="font-size:0.8rem;max-width:160px" class="truncate">${escapeHTML(r.bankRow?.desc || '—')}</td>
+        <td style="font-size:0.8rem;white-space:nowrap">${NORMALIZER.formatDateBR(r.systemRow?.date) || '—'}</td>
+        <td style="font-size:0.85rem;font-weight:600;text-align:right;white-space:nowrap;${r.systemRow?.value < 0 ? 'color:var(--danger)' : 'color:var(--success)'}">
+          ${r.systemRow?.value !== null && r.systemRow?.value !== undefined ? NORMALIZER.formatCurrency(r.systemRow.value) : '—'}
+        </td>
+        <td style="font-size:0.8rem;max-width:160px" class="truncate">${escapeHTML(r.systemRow?.desc || '—')}</td>
+        <td style="font-size:0.75rem;color:var(--text-muted)">${escapeHTML(r.note || '')}</td>
+      </tr>
+    `).join('');
+  }
+
+  document.getElementById('detail-search')?.addEventListener('input', () => {
+    if (selectedSession?.results) renderDetailTable(selectedSession.results);
+  });
+  document.getElementById('detail-status-filter')?.addEventListener('change', () => {
+    if (selectedSession?.results) renderDetailTable(selectedSession.results);
+  });
+
+  window.deleteSession = async function(id) {
+    const ok = await APP.confirm('Deseja excluir esta conciliação?', 'Excluir Sessão');
+    if (!ok) return;
+    STORAGE.deleteSession(id);
+    APP.toast('Sessão excluída.', 'success');
+    setTimeout(() => location.reload(), 800);
+  };
+
+  // Export buttons
+  document.getElementById('btn-export-excel')?.addEventListener('click', () => {
+    if (!selectedSession?.results) { APP.toast('Selecione uma sessão primeiro.', 'warning'); return; }
+    REPORTS.exportExcel(selectedSession.results, selectedSession.summary, 'relatorio_conciliacao');
+    APP.toast('Exportando Excel...', 'success');
+  });
+
+  document.getElementById('btn-export-pdf')?.addEventListener('click', () => {
+    if (!selectedSession?.results) { APP.toast('Selecione uma sessão primeiro.', 'warning'); return; }
+    REPORTS.exportPDF(selectedSession.results, selectedSession.summary, 'relatorio_conciliacao');
+    APP.toast('Gerando PDF...', 'success');
+  });
+});
+</script>
+</body>
+</html>

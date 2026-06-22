@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Usuários – Sistema de Conciliação Bancária</title>
+  <meta name="description" content="Gerenciamento de usuários e controle de acesso ao sistema.">
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+<div id="toast-container" class="toast-container"></div>
+
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 7H6a2 2 0 00-2 2v9a2 2 0 002 2h9a2 2 0 002-2v-3M9 7h9m-9 0V4a1 1 0 011-1h7a1 1 0 011 1v3M9 12h6m-6 4h3"/></svg>
+      </div>
+      <div class="sidebar-logo-text">
+        <h1>CONCILIAÇÃO</h1>
+        <span>Bancária Inteligente</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Principal</div>
+      <a href="dashboard.html" class="nav-item"><svg class="nav-item-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg><span class="nav-item-label">Dashboard</span></a>
+      <a href="conciliacao.html" class="nav-item"><svg class="nav-item-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg><span class="nav-item-label">Conciliação</span></a>
+      <a href="relatorios.html" class="nav-item"><svg class="nav-item-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><span class="nav-item-label">Relatórios</span></a>
+      <div class="sidebar-section-label" style="margin-top:var(--space-3)">Administração</div>
+      <a href="usuarios.html" class="nav-item active"><svg class="nav-item-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span class="nav-item-label">Usuários</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar">AD</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name">Administrador</div>
+          <div class="sidebar-user-role">Administrador</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-content" id="main-content">
+    <header class="header">
+      <button class="header-toggle" id="sidebar-toggle"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+      <div class="header-breadcrumb">
+        <span>Administração</span><span class="header-breadcrumb-sep">›</span>
+        <span class="header-breadcrumb-current">Gerenciar Usuários</span>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-ghost btn-icon btn-sm logout-btn">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <!-- Page Header -->
+      <div class="page-header animate-slide-up">
+        <div>
+          <h1 class="page-title">Gerenciar Usuários</h1>
+          <p class="page-subtitle">Controle de acesso e perfis de usuários do sistema</p>
+        </div>
+        <button class="btn btn-primary" id="btn-new-user">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M12 4v16m8-8H4"/>
+          </svg>
+          Novo Usuário
+        </button>
+      </div>
+
+      <!-- Role stats -->
+      <div class="grid grid-cols-3 gap-4 animate-slide-up" style="margin-bottom:var(--space-8)" id="role-stats">
+        <div class="card" style="text-align:center">
+          <div style="font-size:2rem;margin-bottom:var(--space-2)">🔴</div>
+          <div style="font-size:1.5rem;font-weight:800;color:var(--danger)" id="count-admin">—</div>
+          <div style="font-size:0.8rem;color:var(--text-muted)">Administradores</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div style="font-size:2rem;margin-bottom:var(--space-2)">🔵</div>
+          <div style="font-size:1.5rem;font-weight:800;color:var(--brand-primary)" id="count-analista">—</div>
+          <div style="font-size:0.8rem;color:var(--text-muted)">Analistas</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div style="font-size:2rem;margin-bottom:var(--space-2)">🟣</div>
+          <div style="font-size:1.5rem;font-weight:800;color:var(--info)" id="count-auditor">—</div>
+          <div style="font-size:0.8rem;color:var(--text-muted)">Auditores</div>
+        </div>
+      </div>
+
+      <!-- User Table -->
+      <div class="data-table-container animate-slide-up">
+        <div class="data-table-toolbar">
+          <span class="data-table-title">Lista de Usuários</span>
+          <div class="search-input-wrap">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" id="user-search" placeholder="Buscar usuário...">
+          </div>
+          <span class="data-table-count" id="users-count"></span>
+        </div>
+        <div class="table-wrapper">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Usuário</th>
+                <th>Login</th>
+                <th>Perfil</th>
+                <th>Status</th>
+                <th>Último Acesso</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="users-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Audit Log -->
+      <div class="chart-card animate-slide-up" style="margin-top:var(--space-8)">
+        <div class="section-header">
+          <span class="section-title">Log de Auditoria</span>
+          <span class="text-xs text-muted">Últimas 50 ações</span>
+        </div>
+        <div class="table-wrapper">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Data/Hora</th>
+                <th>Usuário</th>
+                <th>Descrição</th>
+                <th>Ação</th>
+              </tr>
+            </thead>
+            <tbody id="audit-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- User Modal -->
+<div class="modal-overlay" id="user-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="modal-user-title">Novo Usuário</h3>
+      <button class="modal-close">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="user-form">
+      <div style="display:flex;flex-direction:column;gap:var(--space-4)">
+        <div class="input-group">
+          <label class="input-label" for="u-name">Nome Completo *</label>
+          <input type="text" id="u-name" class="input" placeholder="Nome do usuário" required>
+        </div>
+        <div class="input-group">
+          <label class="input-label" for="u-email">E-mail *</label>
+          <input type="email" id="u-email" class="input" placeholder="email@empresa.com" required>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4)">
+          <div class="input-group">
+            <label class="input-label" for="u-username">Nome de Usuário *</label>
+            <input type="text" id="u-username" class="input" placeholder="login" required>
+          </div>
+          <div class="input-group">
+            <label class="input-label" for="u-password">Senha</label>
+            <input type="password" id="u-password" class="input" placeholder="Senha">
+          </div>
+        </div>
+        <div class="input-group">
+          <label class="input-label" for="u-role">Perfil *</label>
+          <select id="u-role" class="input" required>
+            <option value="">Selecione um perfil</option>
+            <option value="admin">🔴 Administrador</option>
+            <option value="analista">🔵 Analista Financeiro</option>
+            <option value="auditor">🟣 Auditor</option>
+          </select>
+        </div>
+        <div class="card card-sm" style="margin-top:var(--space-2)">
+          <div style="font-size:0.75rem;font-weight:700;color:var(--text-muted);margin-bottom:var(--space-3);text-transform:uppercase;letter-spacing:0.06em">
+            Permissões por Perfil
+          </div>
+          <div style="display:flex;flex-direction:column;gap:var(--space-2);font-size:0.8rem;color:var(--text-secondary)">
+            <div>🔴 <strong>Administrador</strong> – Acesso total: usuários, conciliação, relatórios</div>
+            <div>🔵 <strong>Analista</strong> – Dashboard, conciliação, relatórios</div>
+            <div>🟣 <strong>Auditor</strong> – Dashboard e relatórios (somente leitura)</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="modal-cancel">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar Usuário</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="js/storage.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/normalizer.js"></script>
+<script src="js/app.js"></script>
+<script src="js/usuarios.js"></script>
+<script>
+// Populate role stat counts
+document.addEventListener('DOMContentLoaded', () => {
+  const users = AUTH.getAllUsers();
+  document.getElementById('count-admin').textContent   = users.filter(u => u.role === 'admin').length;
+  document.getElementById('count-analista').textContent = users.filter(u => u.role === 'analista').length;
+  document.getElementById('count-auditor').textContent  = users.filter(u => u.role === 'auditor').length;
+});
+</script>
+</body>
+</html>

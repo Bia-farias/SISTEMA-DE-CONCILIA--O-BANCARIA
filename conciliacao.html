@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conciliação – Sistema de Conciliação Bancária</title>
+  <meta name="description" content="Workspace de conciliação bancária automática com IA.">
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/conciliacao.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" integrity="sha384-e6nUZLBkQ86NJ6TVVKAeSaK8jWa3NhkYWZFomE39AvDbQWeie9PlQqM3pmYW5d1g" crossorigin="anonymous"></script>
+  <!-- PapaParse -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" integrity="sha384-D/t0ZMqQW31H3az8ktEiNb39wyKnS82iFY52QPACM+IjKW3jDUhyIgh2PApRqJZs" crossorigin="anonymous"></script>
+  <!-- SheetJS -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" integrity="sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw" crossorigin="anonymous"></script>
+  <!-- jsPDF -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" integrity="sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.31/dist/jspdf.plugin.autotable.min.js" integrity="sha384-vuyrTV5nkscLp1knFvt+FIHfKKzmROBq5reruhMRslauj54mW+l2B8b6szMN6lCL" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="toast-container" class="toast-container"></div>
+
+<div class="app-layout">
+  <!-- Sidebar (same as dashboard) -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path d="M9 7H6a2 2 0 00-2 2v9a2 2 0 002 2h9a2 2 0 002-2v-3M9 7h9m-9 0V4a1 1 0 011-1h7a1 1 0 011 1v3M9 12h6m-6 4h3"/>
+        </svg>
+      </div>
+      <div class="sidebar-logo-text">
+        <h1>CONCILIAÇÃO</h1>
+        <span>Bancária Inteligente</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Principal</div>
+      <a href="dashboard.html" class="nav-item">
+        <svg class="nav-item-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        <span class="nav-item-label">Dashboard</span>
+      </a>
+      <a href="conciliacao.html" class="nav-item active">
+        <svg class="nav-item-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+        <span class="nav-item-label">Conciliação</span>
+      </a>
+      <a href="relatorios.html" class="nav-item">
+        <svg class="nav-item-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <span class="nav-item-label">Relatórios</span>
+      </a>
+      <div class="sidebar-section-label" style="margin-top:var(--space-3)" data-role="admin">Administração</div>
+      <a href="usuarios.html" class="nav-item" data-role="admin">
+        <svg class="nav-item-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <span class="nav-item-label">Usuários</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar">AD</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name">Administrador</div>
+          <div class="sidebar-user-role">Administrador</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-content" id="main-content">
+    <header class="header">
+      <button class="header-toggle" id="sidebar-toggle">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <div class="header-breadcrumb">
+        <span>Sistema</span><span class="header-breadcrumb-sep">›</span>
+        <span class="header-breadcrumb-current">Conciliação Bancária</span>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-secondary btn-sm" id="btn-demo" title="Carregar dados de demonstração">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+          Demo
+        </button>
+        <button class="btn btn-ghost btn-icon btn-sm logout-btn">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <!-- Page Header -->
+      <div class="page-header animate-slide-up">
+        <div>
+          <h1 class="page-title">Conciliação Bancária</h1>
+          <p class="page-subtitle">Importe os arquivos, execute a conciliação e visualize os resultados</p>
+        </div>
+        <div class="flex gap-3">
+          <button class="btn btn-secondary" id="btn-clear" style="display:none">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Nova Conciliação
+          </button>
+          <button class="btn btn-success" id="btn-export" style="display:none">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Exportar Excel
+          </button>
+        </div>
+      </div>
+
+      <!-- Steps -->
+      <div class="steps animate-slide-up" id="steps-indicator">
+        <div class="step active" id="step-1">
+          <div class="step-indicator">
+            <div class="step-circle">1</div>
+            <div class="step-label">Importar</div>
+          </div>
+          <div class="step-connector"></div>
+        </div>
+        <div class="step" id="step-2">
+          <div class="step-indicator">
+            <div class="step-circle">2</div>
+            <div class="step-label">Visualizar</div>
+          </div>
+          <div class="step-connector"></div>
+        </div>
+        <div class="step" id="step-3">
+          <div class="step-indicator">
+            <div class="step-circle">3</div>
+            <div class="step-label">Conciliar</div>
+          </div>
+          <div class="step-connector"></div>
+        </div>
+        <div class="step" id="step-4">
+          <div class="step-indicator">
+            <div class="step-circle">4</div>
+            <div class="step-label">Resultados</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 1: Upload -->
+      <div id="upload-section">
+        <div class="upload-panel animate-slide-up">
+          <!-- Bank upload -->
+          <div class="upload-card">
+            <div class="upload-card-header">
+              <div class="upload-card-icon" style="background:rgba(59,130,246,0.12);color:var(--brand-primary)">
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                </svg>
+              </div>
+              <div>
+                <div class="upload-card-title">Extrato Bancário</div>
+                <div class="upload-card-subtitle">Arquivo do banco</div>
+              </div>
+            </div>
+            <div class="upload-zone" id="bank-drop-zone" onclick="document.getElementById('bank-file').click()">
+              <div class="upload-zone-icon">
+                <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                </svg>
+              </div>
+              <div class="upload-zone-title">Arraste o arquivo ou clique</div>
+              <div class="upload-zone-subtitle">para selecionar o extrato bancário</div>
+              <div class="upload-zone-formats">
+                <span class="format-badge">OFX</span>
+                <span class="format-badge">CSV</span>
+                <span class="format-badge">XLSX</span>
+              </div>
+              <input type="file" id="bank-file" accept=".ofx,.qfx,.csv,.xlsx,.xls" style="display:none">
+            </div>
+            <div id="bank-file-info" style="display:none"></div>
+          </div>
+
+          <!-- System upload -->
+          <div class="upload-card">
+            <div class="upload-card-header">
+              <div class="upload-card-icon" style="background:rgba(16,185,129,0.12);color:var(--success)">
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+              </div>
+              <div>
+                <div class="upload-card-title">Relatório do Sistema</div>
+                <div class="upload-card-subtitle">ERP, planilha interna</div>
+              </div>
+            </div>
+            <div class="upload-zone" id="system-drop-zone" onclick="document.getElementById('system-file').click()">
+              <div class="upload-zone-icon" style="background:rgba(16,185,129,0.1);color:var(--success)">
+                <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                </svg>
+              </div>
+              <div class="upload-zone-title">Arraste o arquivo ou clique</div>
+              <div class="upload-zone-subtitle">para selecionar o relatório interno</div>
+              <div class="upload-zone-formats">
+                <span class="format-badge">CSV</span>
+                <span class="format-badge">XLSX</span>
+              </div>
+              <input type="file" id="system-file" accept=".csv,.xlsx,.xls" style="display:none">
+            </div>
+            <div id="system-file-info" style="display:none"></div>
+          </div>
+        </div>
+
+        <!-- Config & Run -->
+        <div class="run-panel animate-slide-up">
+          <div class="run-panel-header">
+            <div>
+              <h3 style="font-size:1rem;font-weight:700;margin-bottom:4px">Configurações de Conciliação</h3>
+              <p style="font-size:0.8rem;color:var(--text-muted);margin:0">Selecione as estratégias a utilizar</p>
+            </div>
+            <button class="btn btn-primary" id="btn-run" disabled>
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              Executar Conciliação
+            </button>
+          </div>
+
+          <div class="run-options">
+            <div class="run-option active" data-option="exact">
+              <div class="run-option-check"></div>
+              <span class="run-option-label">✅ Conciliação Exata</span>
+            </div>
+            <div class="run-option active" data-option="date-tolerance">
+              <div class="run-option-check"></div>
+              <span class="run-option-label">📅 Tolerância de Data</span>
+            </div>
+            <div class="run-option active" data-option="similarity">
+              <div class="run-option-check"></div>
+              <span class="run-option-label">🔍 Similaridade de Texto</span>
+            </div>
+            <div class="run-option active" data-option="value-range">
+              <div class="run-option-check"></div>
+              <span class="run-option-label">💲 Faixa de Valor</span>
+            </div>
+            <div class="run-option active" data-option="ai">
+              <div class="run-option-check"></div>
+              <span class="run-option-label">🤖 Sugestões IA</span>
+            </div>
+          </div>
+
+          <div class="tolerance-config" style="margin-top:var(--space-4)">
+            <span class="tolerance-label">Tolerância de data:</span>
+            <input type="number" class="tolerance-input" id="date-tolerance" value="3" min="0" max="30">
+            <span class="tolerance-label">dias</span>
+            <span class="tolerance-label" style="margin-left:var(--space-4)">Tolerância de valor:</span>
+            <input type="number" class="tolerance-input" id="value-tolerance" value="0.5" min="0" max="100" step="0.1">
+            <span class="tolerance-label">%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: Preview (hidden initially) -->
+      <div id="preview-section" style="display:none" class="animate-slide-up">
+        <div class="preview-grid">
+          <div class="preview-panel">
+            <div class="preview-panel-header">
+              <span class="preview-panel-title">
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#3b82f6" stroke-width="2"><path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                Extrato Bancário
+              </span>
+              <span class="preview-panel-count" id="bank-preview-count">0 registros</span>
+            </div>
+            <div class="preview-table-wrap">
+              <table class="table" id="bank-preview-table">
+                <thead><tr><th>Data</th><th>Valor</th><th>Descrição</th><th>Ref.</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="preview-panel">
+            <div class="preview-panel-header">
+              <span class="preview-panel-title">
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#10b981" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                Relatório do Sistema
+              </span>
+              <span class="preview-panel-count" id="system-preview-count">0 registros</span>
+            </div>
+            <div class="preview-table-wrap">
+              <table class="table" id="system-preview-table">
+                <thead><tr><th>Data</th><th>Valor</th><th>Descrição</th><th>Ref.</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: Progress (hidden) -->
+      <div id="progress-section" style="display:none" class="animate-fade-in">
+        <div class="run-panel">
+          <div class="run-progress">
+            <div class="run-progress-header">
+              <span class="run-progress-label" id="progress-label">Iniciando conciliação...</span>
+              <span class="run-progress-pct" id="progress-pct">0%</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+            <div class="run-steps-list" id="run-steps-list">
+              <div class="run-step-item" id="step-dupes">
+                <svg class="run-step-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+                Duplicidades
+              </div>
+              <div class="run-step-item" id="step-exact">
+                <svg class="run-step-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+                Conciliação Exata
+              </div>
+              <div class="run-step-item" id="step-date">
+                <svg class="run-step-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+                Tolerância de Data
+              </div>
+              <div class="run-step-item" id="step-sim">
+                <svg class="run-step-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+                Similaridade
+              </div>
+              <div class="run-step-item" id="step-val">
+                <svg class="run-step-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+                Faixa de Valor
+              </div>
+              <div class="run-step-item" id="step-ai">
+                <svg class="run-step-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+                Sugestões IA
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 4: Results (hidden) -->
+      <div id="results-section" style="display:none" class="animate-slide-up">
+        <!-- Summary bar -->
+        <div class="results-summary-bar" id="results-summary-bar"></div>
+
+        <!-- Chart -->
+        <div class="chart-card" style="margin-bottom:var(--space-5)">
+          <div class="chart-header">
+            <div class="chart-title">Distribuição dos Resultados</div>
+          </div>
+          <div class="chart-container" style="height:200px">
+            <canvas id="results-chart"></canvas>
+          </div>
+        </div>
+
+        <!-- Results Table -->
+        <div class="data-table-container">
+          <div class="data-table-toolbar">
+            <span class="data-table-title">Resultados da Conciliação</span>
+            <div class="search-input-wrap">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+              <input type="text" id="results-search" placeholder="Buscar...">
+            </div>
+            <span class="data-table-count" id="results-count"></span>
+          </div>
+
+          <div class="filter-chips" id="filter-chips">
+            <span class="filter-chip active" data-filter="all">Todos</span>
+            <span class="filter-chip" data-filter="CONCILIADO">✅ Conciliado</span>
+            <span class="filter-chip" data-filter="CONCILIADO_DATA">📅 Div. Data</span>
+            <span class="filter-chip" data-filter="PROVAVEL">🤖 Provável</span>
+            <span class="filter-chip" data-filter="DIV_VALOR">💲 Div. Valor</span>
+            <span class="filter-chip" data-filter="NAO_REGISTRADO">🔴 Não Reg.</span>
+            <span class="filter-chip" data-filter="NAO_COMPENSADO">🟣 Não Comp.</span>
+            <span class="filter-chip" data-filter="DUPLICIDADE">⚠️ Duplicidade</span>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="table" id="results-table">
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Data Banco</th>
+                  <th>Valor Banco</th>
+                  <th>Descrição Banco</th>
+                  <th>Data Sistema</th>
+                  <th>Valor Sistema</th>
+                  <th>Descrição Sistema</th>
+                  <th>Observação</th>
+                </tr>
+              </thead>
+              <tbody id="results-tbody"></tbody>
+            </table>
+          </div>
+
+          <div class="pagination" id="results-pagination"></div>
+        </div>
+
+        <!-- AI Suggestions Panel -->
+        <div class="ai-panel" id="ai-panel" style="display:none;margin-top:var(--space-6)">
+          <div class="ai-panel-header">
+            <div class="ai-panel-icon">
+              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+              </svg>
+            </div>
+            <div>
+              <div class="ai-panel-title">Sugestões de IA</div>
+              <div class="ai-panel-subtitle">Correspondências identificadas pela inteligência artificial</div>
+            </div>
+            <div class="ai-panel-badge">
+              <div class="ai-pulse"></div>
+              <span id="ai-suggestions-count">0 sugestões</span>
+            </div>
+          </div>
+          <div class="ai-suggestions-list" id="ai-suggestions-list"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="js/storage.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/normalizer.js"></script>
+<script src="js/parser.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/reports.js"></script>
+<script src="js/app.js"></script>
+<script src="js/charts.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const session = AUTH.requireAuth(['admin', 'analista']);
+  if (!session) return;
+
+  let bankData   = null;
+  let systemData = null;
+  let reconResults = null;
+  let currentFilter = 'all';
+  let currentPage   = 1;
+  const PAGE_SIZE   = 20;
+  let activeSuggestions = [];
+
+  // ---- Options toggles ----
+  document.querySelectorAll('.run-option').forEach(opt => {
+    opt.addEventListener('click', () => opt.classList.toggle('active'));
+  });
+
+  // ---- File upload handlers ----
+  function setupDropZone(zoneId, inputId, dataKey) {
+    const zone  = document.getElementById(zoneId);
+    const input = document.getElementById(inputId);
+
+    zone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      zone.classList.add('drag-over');
+    });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file) handleFile(file, dataKey, zoneId, inputId);
+    });
+    input.addEventListener('change', (e) => {
+      if (e.target.files[0]) handleFile(e.target.files[0], dataKey, zoneId, inputId);
+    });
+  }
+
+  setupDropZone('bank-drop-zone',   'bank-file',   'bank');
+  setupDropZone('system-drop-zone', 'system-file', 'system');
+
+  async function handleFile(file, dataKey, zoneId, inputId) {
+    const zone = document.getElementById(zoneId);
+    zone.style.pointerEvents = 'none';
+
+    try {
+      APP.toast(`Carregando ${file.name}...`, 'info', 2000);
+      const parsed = await PARSER.parseFile(file);
+
+      if (dataKey === 'bank') {
+        bankData = parsed;
+        showFileInfo('bank-file-info', file, parsed.rowCount);
+        zone.classList.add('has-file');
+        updatePreview();
+      } else {
+        systemData = parsed;
+        showFileInfo('system-file-info', file, parsed.rowCount);
+        zone.classList.add('has-file');
+        updatePreview();
+      }
+
+      checkRunButton();
+      APP.toast(`${file.name} importado: ${parsed.rowCount} registros.`, 'success');
+    } catch (err) {
+      APP.toast('Erro ao importar: ' + err.message, 'error');
+    } finally {
+      zone.style.pointerEvents = '';
+    }
+  }
+
+  function showFileInfo(containerId, file, count) {
+    const el = document.getElementById(containerId);
+    const sizeStr = (file.size / 1024).toFixed(1) + ' KB';
+    el.style.display = 'block';
+    el.innerHTML = `
+      <div class="file-info">
+        <div class="file-info-icon">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div class="file-info-name">${escapeHTML(file.name)}</div>
+        <div class="file-info-size">${count} reg. · ${sizeStr}</div>
+        <button class="file-info-remove" onclick="removeFile('${containerId}')">
+          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+    `;
+  }
+
+  window.removeFile = function(containerId) {
+    document.getElementById(containerId).style.display = 'none';
+    if (containerId === 'bank-file-info') {
+      bankData = null;
+      document.getElementById('bank-drop-zone').classList.remove('has-file');
+      document.getElementById('bank-file').value = '';
+    } else {
+      systemData = null;
+      document.getElementById('system-drop-zone').classList.remove('has-file');
+      document.getElementById('system-file').value = '';
+    }
+    checkRunButton();
+    if (!bankData && !systemData) {
+      document.getElementById('preview-section').style.display = 'none';
+    } else {
+      updatePreview();
+    }
+  };
+
+  function checkRunButton() {
+    document.getElementById('btn-run').disabled = !(bankData && systemData);
+  }
+
+  // ---- Preview ----
+  function updatePreview() {
+    document.getElementById('preview-section').style.display = 'block';
+
+    // Step 2 active
+    setStep(2);
+
+    if (bankData) {
+      const rows = bankData.normalizedRows.slice(0, 50);
+      const tbody = document.querySelector('#bank-preview-table tbody');
+      tbody.innerHTML = rows.map(r => `
+        <tr>
+          <td style="font-size:0.75rem;white-space:nowrap">${NORMALIZER.formatDateBR(r.date) || '—'}</td>
+          <td style="font-size:0.75rem;white-space:nowrap;text-align:right;${r.value<0?'color:var(--danger)':'color:var(--success)'}">
+            ${r.value !== null ? NORMALIZER.formatCurrency(r.value) : '—'}
+          </td>
+          <td style="font-size:0.75rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHTML(r.desc)}">${escapeHTML(r.desc) || '—'}</td>
+          <td style="font-size:0.75rem;color:var(--text-muted)">${escapeHTML(r.ref) || '—'}</td>
+        </tr>
+      `).join('');
+      document.getElementById('bank-preview-count').textContent = bankData.rowCount + ' registros';
+    }
+
+    if (systemData) {
+      const rows = systemData.normalizedRows.slice(0, 50);
+      const tbody = document.querySelector('#system-preview-table tbody');
+      tbody.innerHTML = rows.map(r => `
+        <tr>
+          <td style="font-size:0.75rem;white-space:nowrap">${NORMALIZER.formatDateBR(r.date) || '—'}</td>
+          <td style="font-size:0.75rem;white-space:nowrap;text-align:right;${r.value<0?'color:var(--danger)':'color:var(--success)'}">
+            ${r.value !== null ? NORMALIZER.formatCurrency(r.value) : '—'}
+          </td>
+          <td style="font-size:0.75rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHTML(r.desc)}">${escapeHTML(r.desc) || '—'}</td>
+          <td style="font-size:0.75rem;color:var(--text-muted)">${escapeHTML(r.ref) || '—'}</td>
+        </tr>
+      `).join('');
+      document.getElementById('system-preview-count').textContent = systemData.rowCount + ' registros';
+    }
+  }
+
+  // ---- Demo data ----
+  document.getElementById('btn-demo')?.addEventListener('click', () => {
+    bankData   = PARSER.generateDemoBank();
+    systemData = PARSER.generateDemoSystem();
+    showFileInfo('bank-file-info',   { name: bankData.fileName,   size: 4096 }, bankData.rowCount);
+    showFileInfo('system-file-info', { name: systemData.fileName, size: 3072 }, systemData.rowCount);
+    document.getElementById('bank-drop-zone').classList.add('has-file');
+    document.getElementById('system-drop-zone').classList.add('has-file');
+    checkRunButton();
+    updatePreview();
+    APP.toast('Dados de demonstração carregados!', 'success');
+  });
+
+  // ---- Run reconciliation ----
+  document.getElementById('btn-run')?.addEventListener('click', runReconciliation);
+
+  async function runReconciliation() {
+    if (!bankData || !systemData) return;
+
+    const activeOptions = [...document.querySelectorAll('.run-option.active')].map(o => o.dataset.option);
+    const config = {
+      dateTolerance:    parseInt(document.getElementById('date-tolerance').value) || 3,
+      valueTolerance:   parseFloat(document.getElementById('value-tolerance').value) || 0.5,
+      enableSimilarity: activeOptions.includes('similarity'),
+      enableAI:         activeOptions.includes('ai'),
+    };
+
+    // Show progress
+    document.getElementById('upload-section').style.display = 'none';
+    document.getElementById('preview-section').style.display = 'none';
+    document.getElementById('progress-section').style.display = 'block';
+    setStep(3);
+
+    const runSteps = {
+      5:  ['step-dupes',  'active'],
+      20: ['step-dupes',  'done',  'step-exact',  'active'],
+      40: ['step-exact',  'done',  'step-date',   'active'],
+      60: ['step-date',   'done',  'step-sim',    'active'],
+      75: ['step-sim',    'done',  'step-val',    'active'],
+      88: ['step-val',    'done'],
+      95: ['step-ai',     'active'],
+      100:['step-ai',     'done'],
+    };
+
+    const onProgress = (pct, label) => {
+      document.getElementById('progress-fill').style.width = pct + '%';
+      document.getElementById('progress-pct').textContent  = pct + '%';
+      document.getElementById('progress-label').textContent = label;
+
+      const stepCmds = runSteps[pct] || [];
+      for (let i = 0; i < stepCmds.length; i += 2) {
+        const el = document.getElementById(stepCmds[i]);
+        if (el) el.className = 'run-step-item ' + stepCmds[i+1];
+      }
+    };
+
+    try {
+      const result = await ENGINE.reconcile(
+        bankData.normalizedRows,
+        systemData.normalizedRows,
+        config,
+        onProgress
+      );
+
+      reconResults = result;
+
+      // Save session
+      const session = STORAGE.createReconSession(bankData, systemData, config);
+      session.status = 'completed';
+      session.results = result.results;
+      session.summary = result.summary;
+      STORAGE.saveSession(session);
+      AUDIT.log('conciliacao_concluida', `Conciliação finalizada: ${result.summary.total} itens`, result.summary);
+      STORAGE.addNotification({
+        title: 'Conciliação Concluída',
+        message: `${result.summary.conciliado} itens conciliados de ${result.summary.total} total.`,
+      });
+
+      await new Promise(r => setTimeout(r, 500));
+
+      // Show results
+      document.getElementById('progress-section').style.display = 'none';
+      document.getElementById('results-section').style.display = 'block';
+      document.getElementById('btn-clear').style.display = '';
+      document.getElementById('btn-export').style.display = '';
+      setStep(4);
+
+      renderResults(result);
+      APP.toast(`Conciliação concluída! ${result.summary.percentual}% conciliado.`, 'success');
+    } catch (err) {
+      APP.toast('Erro na conciliação: ' + err.message, 'error');
+      document.getElementById('progress-section').style.display = 'none';
+      document.getElementById('upload-section').style.display = 'block';
+      setStep(1);
+    }
+  }
+
+  function renderResults(result) {
+    const { results, summary, aiSuggestions } = result;
+    activeSuggestions = aiSuggestions || [];
+
+    // Summary bar
+    const summaryBar = document.getElementById('results-summary-bar');
+    const statusItems = [
+      { key: 'conciliado',       count: summary.conciliado + summary.conciliadoData, label: 'Conciliado',    css: 'conciliado' },
+      { key: 'CONCILIADO_DATA',  count: summary.conciliadoData,  label: 'Div. Data',     css: 'div-data'   },
+      { key: 'PROVAVEL',         count: summary.provavelCorrespondencia, label: 'Provável', css: 'provavel' },
+      { key: 'DIV_VALOR',        count: summary.divergenciaValor, label: 'Div. Valor',   css: 'div-valor'  },
+      { key: 'NAO_REGISTRADO',   count: summary.naoRegistrado,    label: 'Não Reg.',      css: 'nao-reg'    },
+      { key: 'NAO_COMPENSADO',   count: summary.naoCompensado,    label: 'Não Comp.',     css: 'nao-comp'   },
+      { key: 'DUPLICIDADE',      count: summary.duplicidade,      label: 'Duplicidade',   css: 'duplicidade'},
+    ];
+
+    summaryBar.innerHTML = statusItems.map(s => `
+      <div class="result-summary-item ${s.css}" onclick="filterResults('${s.key}')">
+        <div class="result-summary-count">${s.count}</div>
+        <div class="result-summary-label">${s.label}</div>
+      </div>
+    `).join('');
+
+    // Status chart
+    CHARTS.createStatusChart('results-chart', summary);
+
+    // Render table
+    currentFilter = 'all';
+    renderTable(results);
+
+    // AI Suggestions
+    if (aiSuggestions && aiSuggestions.length > 0) {
+      document.getElementById('ai-panel').style.display = 'block';
+      document.getElementById('ai-suggestions-count').textContent = aiSuggestions.length + ' sugestão(ões)';
+      const listEl = document.getElementById('ai-suggestions-list');
+      listEl.innerHTML = aiSuggestions.slice(0, 5).map(s => {
+        const color = AI_ENGINE.confidenceColor(s.confidencePct);
+        return `
+          <div class="ai-suggestion-card">
+            <div class="ai-suggestion-header">
+              <span class="ai-badge">🤖 Sugestão IA</span>
+              <span style="font-size:0.8rem;font-weight:700;color:${color}">${s.confidencePct}% de confiança</span>
+            </div>
+            <div class="confidence-bar-wrap">
+              <span class="confidence-label">Confiança</span>
+              <div class="confidence-bar">
+                <div class="confidence-fill" style="width:${s.confidencePct}%;background:${color}"></div>
+              </div>
+              <span class="confidence-pct" style="color:${color}">${s.confidencePct}%</span>
+            </div>
+            <div class="ai-suggestion-rows">
+              <div class="ai-row-item">
+                <div class="ai-row-source">🏦 Banco</div>
+                <div class="ai-row-desc">${escapeHTML(s.bankRow.desc || '—')}</div>
+                <div class="ai-row-value">${NORMALIZER.formatCurrency(s.bankRow.value)}</div>
+                <div class="ai-row-date">${NORMALIZER.formatDateBR(s.bankRow.date)}</div>
+              </div>
+              <div class="ai-match-icon">↔</div>
+              <div class="ai-row-item">
+                <div class="ai-row-source">💻 Sistema</div>
+                <div class="ai-row-desc">${escapeHTML(s.systemRow.desc || '—')}</div>
+                <div class="ai-row-value">${NORMALIZER.formatCurrency(s.systemRow.value)}</div>
+                <div class="ai-row-date">${NORMALIZER.formatDateBR(s.systemRow.date)}</div>
+              </div>
+            </div>
+            <div class="ai-suggestion-actions">
+              <button class="btn btn-secondary btn-sm" onclick="rejectSuggestion('${s.id}')">Rejeitar</button>
+              <button class="btn btn-primary btn-sm" onclick="acceptSuggestion('${s.id}')">✅ Confirmar</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  window.acceptSuggestion = function(id) {
+    const sug = activeSuggestions.find(s => s.id === id);
+    if (sug) {
+      AI_ENGINE.learnMatch(sug.bankRow, sug.systemRow);
+    }
+    APP.toast('Correspondência confirmada e aprendida!', 'success');
+    document.querySelector(`[onclick="acceptSuggestion('${id}')"]`)?.closest('.ai-suggestion-card')?.remove();
+  };
+  window.rejectSuggestion = function(id) {
+    document.querySelector(`[onclick="rejectSuggestion('${id}')"]`)?.closest('.ai-suggestion-card')?.remove();
+  };
+
+  function renderTable(results) {
+    let filtered = results;
+    const search = document.getElementById('results-search')?.value?.toLowerCase() || '';
+
+    if (currentFilter !== 'all' && currentFilter !== 'conciliado') {
+      filtered = filtered.filter(r => r.status === currentFilter);
+    } else if (currentFilter === 'conciliado') {
+      filtered = filtered.filter(r => r.status === 'CONCILIADO' || r.status === 'CONCILIADO_DATA');
+    }
+
+    if (search) {
+      filtered = filtered.filter(r =>
+        (r.bankRow?.desc || '').toLowerCase().includes(search) ||
+        (r.systemRow?.desc || '').toLowerCase().includes(search) ||
+        (r.bankRow?.ref || '').toLowerCase().includes(search)
+      );
+    }
+
+    const total  = filtered.length;
+    const pages  = Math.ceil(total / PAGE_SIZE);
+    const start  = (currentPage - 1) * PAGE_SIZE;
+    const paged  = filtered.slice(start, start + PAGE_SIZE);
+
+    document.getElementById('results-count').textContent = `${total} resultado(s)`;
+
+    const statusBadges = {
+      CONCILIADO:      '<span class="badge badge-success badge-dot">Conciliado</span>',
+      CONCILIADO_DATA: '<span class="badge badge-warning badge-dot">Div. Data</span>',
+      PROVAVEL:        '<span class="badge badge-brand badge-dot">Provável</span>',
+      DIV_VALOR:       '<span class="badge badge-pending badge-dot">Div. Valor</span>',
+      NAO_REGISTRADO:  '<span class="badge badge-danger badge-dot">Não Registrado</span>',
+      NAO_COMPENSADO:  '<span class="badge badge-info badge-dot">Não Compensado</span>',
+      DUPLICIDADE:     '<span class="badge badge-secondary badge-dot">Duplicidade</span>',
+    };
+
+    const tbody = document.getElementById('results-tbody');
+    tbody.innerHTML = paged.map(r => `
+      <tr>
+        <td>${statusBadges[r.status] || r.status}</td>
+        <td style="white-space:nowrap;font-size:0.8rem">${NORMALIZER.formatDateBR(r.bankRow?.date) || '—'}</td>
+        <td style="text-align:right;font-size:0.85rem;font-weight:600;white-space:nowrap;${r.bankRow?.value<0?'color:var(--danger)':'color:var(--success)'}">
+          ${r.bankRow?.value !== undefined && r.bankRow?.value !== null ? NORMALIZER.formatCurrency(r.bankRow.value) : '—'}
+        </td>
+        <td style="max-width:180px;font-size:0.8rem" class="truncate" title="${escapeHTML(r.bankRow?.desc || '')}">${escapeHTML(r.bankRow?.desc || '—')}</td>
+        <td style="white-space:nowrap;font-size:0.8rem">${NORMALIZER.formatDateBR(r.systemRow?.date) || '—'}</td>
+        <td style="text-align:right;font-size:0.85rem;font-weight:600;white-space:nowrap;${r.systemRow?.value<0?'color:var(--danger)':'color:var(--success)'}">
+          ${r.systemRow?.value !== undefined && r.systemRow?.value !== null ? NORMALIZER.formatCurrency(r.systemRow.value) : '—'}
+        </td>
+        <td style="max-width:180px;font-size:0.8rem" class="truncate" title="${escapeHTML(r.systemRow?.desc || '')}">${escapeHTML(r.systemRow?.desc || '—')}</td>
+        <td style="font-size:0.75rem;color:var(--text-muted)">${escapeHTML(r.note || '')}</td>
+      </tr>
+    `).join('');
+
+    // Pagination
+    const pag = document.getElementById('results-pagination');
+    pag.innerHTML = `
+      <span class="pagination-info">Exibindo ${start + 1}–${Math.min(start + PAGE_SIZE, total)} de ${total}</span>
+      <div class="pagination-controls">
+        <button class="page-btn" onclick="changePage(${currentPage - 1})" ${currentPage <= 1 ? 'disabled' : ''}>‹</button>
+        ${Array.from({length: Math.min(pages, 5)}, (_, i) => i + 1).map(p => `
+          <button class="page-btn ${p === currentPage ? 'active' : ''}" onclick="changePage(${p})">${p}</button>
+        `).join('')}
+        ${pages > 5 ? '<button class="page-btn" disabled>...</button>' : ''}
+        <button class="page-btn" onclick="changePage(${currentPage + 1})" ${currentPage >= pages ? 'disabled' : ''}>›</button>
+      </div>
+    `;
+  }
+
+  window.changePage = function(page) {
+    currentPage = page;
+    if (reconResults) renderTable(reconResults.results);
+    document.getElementById('results-table')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  window.filterResults = function(filter) {
+    currentFilter = filter;
+    currentPage = 1;
+    if (reconResults) renderTable(reconResults.results);
+  };
+
+  // Filter chips
+  document.getElementById('filter-chips')?.addEventListener('click', (e) => {
+    const chip = e.target.closest('.filter-chip');
+    if (!chip) return;
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    currentFilter = chip.dataset.filter;
+    currentPage = 1;
+    if (reconResults) renderTable(reconResults.results);
+  });
+
+  // Search
+  document.getElementById('results-search')?.addEventListener('input', () => {
+    currentPage = 1;
+    if (reconResults) renderTable(reconResults.results);
+  });
+
+  // Export
+  document.getElementById('btn-export')?.addEventListener('click', () => {
+    if (!reconResults) return;
+    REPORTS.exportExcel(reconResults.results, reconResults.summary, 'conciliacao_bancaria');
+    APP.toast('Exportando Excel...', 'success');
+  });
+
+  // Clear
+  document.getElementById('btn-clear')?.addEventListener('click', async () => {
+    const ok = await APP.confirm('Deseja iniciar uma nova conciliação? Os resultados atuais serão descartados.');
+    if (!ok) return;
+    bankData = systemData = reconResults = null;
+    currentFilter = 'all'; currentPage = 1;
+    document.getElementById('results-section').style.display = 'none';
+    document.getElementById('upload-section').style.display = 'block';
+    document.getElementById('btn-clear').style.display = 'none';
+    document.getElementById('btn-export').style.display = 'none';
+    document.getElementById('bank-file-info').style.display = 'none';
+    document.getElementById('system-file-info').style.display = 'none';
+    document.getElementById('bank-drop-zone').classList.remove('has-file');
+    document.getElementById('system-drop-zone').classList.remove('has-file');
+    document.getElementById('preview-section').style.display = 'none';
+    document.getElementById('btn-run').disabled = true;
+    setStep(1);
+  });
+
+  function setStep(n) {
+    for (let i = 1; i <= 4; i++) {
+      const step = document.getElementById('step-' + i);
+      if (!step) continue;
+      step.classList.remove('active', 'completed');
+      if (i < n)  step.classList.add('completed');
+      if (i === n) step.classList.add('active');
+    }
+  }
+});
+</script>
+</body>
+</html>
