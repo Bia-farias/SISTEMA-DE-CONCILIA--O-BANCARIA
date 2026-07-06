@@ -160,6 +160,12 @@ const NORMALIZER = (() => {
       value: find('VALOR', 'VALUE', 'AMOUNT', 'MONTANTE', 'DEBITO', 'CREDITO'),
       desc:  find('DESCRICAO', 'DESCRIPTION', 'HISTORICO', 'MEMO', 'NARRATIVE', 'COMPLEMENTO'),
       ref:   find('DOCUMENTO', 'DOCUMENT', 'REFERENCIA', 'REF', 'ID', 'NUMERO'),
+      // Extra fields for N x 1 grouping
+      notaFiscal:  find('NOTA FISCAL', 'NF', 'INVOICE', 'NUM NF', 'NFISCAL', 'NFE', 'NOTA'),
+      fornecedor:  find('FORNECEDOR', 'SUPPLIER', 'VENDOR', 'FORN', 'RAZAO SOCIAL'),
+      centroCusto: find('CENTRO CUSTO', 'CC', 'COST CENTER', 'CENTRO', 'CCUSTO'),
+      pedido:      find('PEDIDO', 'ORDER', 'PO', 'NUM PEDIDO', 'ORDEM'),
+      cliente:     find('CLIENTE', 'CUSTOMER', 'CLIENT', 'COMPRADOR'),
     };
   }
 

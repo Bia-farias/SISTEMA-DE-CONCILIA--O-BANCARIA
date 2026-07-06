@@ -1,6 +1,7 @@
 /**
  * engine.js – Reconciliation Engine
  * Runs all matching strategies and produces a full result set
+ * Supports 1x1, Nx1, 1xN, and NxN reconciliation modes
  */
 
 const ENGINE = (() => {
@@ -9,6 +10,7 @@ const ENGINE = (() => {
   const STATUS = {
     CONCILIADO:           'CONCILIADO',
     CONCILIADO_DATA:      'CONCILIADO_DATA',
+    CONCILIADO_GRUPO:     'CONCILIADO_GRUPO',
     PROVAVEL:             'PROVAVEL',
     DIV_VALOR:            'DIV_VALOR',
     NAO_REGISTRADO:       'NAO_REGISTRADO',
@@ -19,6 +21,7 @@ const ENGINE = (() => {
   const STATUS_LABELS = {
     CONCILIADO:       'Conciliado',
     CONCILIADO_DATA:  'Conciliado c/ Divergência de Data',
+    CONCILIADO_GRUPO: 'Conciliado (Grupo)',
     PROVAVEL:         'Provável Correspondência',
     DIV_VALOR:        'Divergência de Valor',
     NAO_REGISTRADO:   'Não Registrado',
@@ -29,6 +32,7 @@ const ENGINE = (() => {
   const STATUS_CSS_CLASS = {
     CONCILIADO:      'badge-success',
     CONCILIADO_DATA: 'badge-warning',
+    CONCILIADO_GRUPO:'badge-group',
     PROVAVEL:        'badge-brand',
     DIV_VALOR:       'badge-pending',
     NAO_REGISTRADO:  'badge-danger',
@@ -70,14 +74,19 @@ const ENGINE = (() => {
       valueTolerance: 0.5,
       enableSimilarity: true,
       enableAI: true,
+      reconciliationType: '1x1',
+      groupField: 'ref',
+      maxItemsPerCombo: 15,
+      enableSubsetSum: true,
       ...config,
     };
 
     const results = [];
     const bankUsed    = new Set();
     const systemUsed  = new Set();
+    let allGroups = [];
 
-    onProgress(5, 'Verificando duplicidades...');
+    onProgress(3, 'Verificando duplicidades...');
     await sleep(100);
 
     // --- Phase 0: Detect duplicates ---
@@ -99,7 +108,45 @@ const ENGINE = (() => {
       }
     }
 
-    onProgress(20, 'Conciliação exata (valor + data)...');
+    // --- Phase G: Grouped reconciliation (N x 1, 1 x N, N x N) ---
+    const reconType = cfg.reconciliationType || '1x1';
+    if (reconType !== '1x1') {
+      onProgress(8, 'Iniciando conciliação por agrupamento...');
+      await sleep(100);
+
+      const groupResult = await GROUPING.reconcileGrouped(
+        bankRows.filter(r => !bankUsed.has(r._id)),
+        systemRows.filter(r => !systemUsed.has(r._id)),
+        cfg,
+        (pct, label) => {
+          // Map grouping progress to 8-40 range
+          const mappedPct = 8 + Math.round(pct * 0.32);
+          onProgress(mappedPct, label);
+        }
+      );
+
+      // Add group results
+      for (const r of groupResult.results) {
+        results.push(r);
+      }
+
+      // Mark used IDs
+      for (const id of groupResult.bankUsed) {
+        bankUsed.add(id);
+      }
+      for (const id of groupResult.systemUsed) {
+        systemUsed.add(id);
+      }
+
+      allGroups = groupResult.groups || [];
+
+      onProgress(40, `Agrupamento concluído: ${groupResult.results.length} grupo(s) conciliado(s).`);
+      await sleep(150);
+    }
+
+    const progressBase = reconType !== '1x1' ? 40 : 20;
+
+    onProgress(progressBase, 'Conciliação exata (valor + data)...');
     await sleep(150);
 
     // --- Phase 1: Exact match (same value + same date) ---
@@ -116,7 +163,7 @@ const ENGINE = (() => {
       }
     }
 
-    onProgress(40, 'Conciliação por tolerância de data...');
+    onProgress(progressBase + 10, 'Conciliação por tolerância de data...');
     await sleep(150);
 
     // --- Phase 2: Date tolerance (same value, date within N days) ---
@@ -142,7 +189,7 @@ const ENGINE = (() => {
       }
     }
 
-    onProgress(60, 'Conciliação por similaridade de texto...');
+    onProgress(progressBase + 20, 'Conciliação por similaridade de texto...');
     await sleep(150);
 
     // --- Phase 3: Similarity (same value, similar description) ---
@@ -170,7 +217,7 @@ const ENGINE = (() => {
       }
     }
 
-    onProgress(75, 'Verificando divergências de valor...');
+    onProgress(progressBase + 30, 'Verificando divergências de valor...');
     await sleep(100);
 
     // --- Phase 4: Value range (small value difference) ---
@@ -198,7 +245,7 @@ const ENGINE = (() => {
       }
     }
 
-    onProgress(88, 'Identificando lançamentos sem par...');
+    onProgress(progressBase + 38, 'Identificando lançamentos sem par...');
     await sleep(100);
 
     // --- Phase 5: Not found in system (in bank, not in system) ---
@@ -236,7 +283,7 @@ const ENGINE = (() => {
     // --- Build summary ---
     const summary = buildSummary(results, bankRows, systemRows);
 
-    return { results, summary, aiSuggestions, config: cfg };
+    return { results, summary, aiSuggestions, config: cfg, groups: allGroups };
   }
 
   // ---- Helper: make result object ----
@@ -267,7 +314,7 @@ const ENGINE = (() => {
     for (const r of results) {
       counts[r.status] = (counts[r.status] || 0) + 1;
       const val = Math.abs(r.value || 0);
-      if (r.status === STATUS.CONCILIADO || r.status === STATUS.CONCILIADO_DATA) {
+      if (r.status === STATUS.CONCILIADO || r.status === STATUS.CONCILIADO_DATA || r.status === STATUS.CONCILIADO_GRUPO) {
         valorConciliado += val;
       } else if (r.status === STATUS.NAO_REGISTRADO || r.status === STATUS.NAO_COMPENSADO) {
         valorPendente += val;
@@ -275,12 +322,13 @@ const ENGINE = (() => {
     }
 
     const total = results.length;
-    const conciliados = (counts[STATUS.CONCILIADO] || 0) + (counts[STATUS.CONCILIADO_DATA] || 0);
+    const conciliados = (counts[STATUS.CONCILIADO] || 0) + (counts[STATUS.CONCILIADO_DATA] || 0) + (counts[STATUS.CONCILIADO_GRUPO] || 0);
 
     return {
       total,
       conciliado:             counts[STATUS.CONCILIADO]      || 0,
       conciliadoData:         counts[STATUS.CONCILIADO_DATA]  || 0,
+      conciliadoGrupo:        counts[STATUS.CONCILIADO_GRUPO] || 0,
       provavelCorrespondencia:counts[STATUS.PROVAVEL]         || 0,
       divergenciaValor:       counts[STATUS.DIV_VALOR]        || 0,
       naoRegistrado:          counts[STATUS.NAO_REGISTRADO]   || 0,

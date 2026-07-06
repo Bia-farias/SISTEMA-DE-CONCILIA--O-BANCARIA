@@ -144,7 +144,19 @@ const PARSER = (() => {
         value: NORMALIZER.normalizeValue(row[colMap.value] || row['VALOR'] || row['valor']),
         desc:  NORMALIZER.normalizeText(row[colMap.desc] || row['DESCRICAO'] || row['descricao'] || ''),
         ref:   String(row[colMap.ref] || row['DOCUMENTO'] || row['documento'] || '').trim(),
+        // Extra fields for N x 1 grouping
+        _extra: {},
       };
+
+      // Collect extra grouping fields
+      const extraFields = ['notaFiscal', 'fornecedor', 'centroCusto', 'pedido', 'cliente'];
+      for (const field of extraFields) {
+        const colName = colMap[field];
+        if (colName && row[colName] !== undefined && row[colName] !== '') {
+          norm._extra[field] = String(row[colName]).trim();
+        }
+      }
+
       return norm;
     }).filter(r => r.value !== null); // Remove rows without value
 
@@ -185,34 +197,46 @@ const PARSER = (() => {
       { date: '2026-06-17', value: -3200.00, desc: 'PAGAMENTO FORNECEDOR DEF COMERCIO', ref: 'TED018' },
       { date: '2026-06-18', value: 5500.00, desc: 'DEPOSITO CHEQUE COMPENSADO', ref: 'CHQ019' },
       { date: '2026-06-19', value: -720.00, desc: 'DEBITO CONTA AGUA SANEAMENTO', ref: 'DEB020' },
+      // N x 1 Demo: Single bank payment for grouped NF items
+      { date: '2026-06-20', value: -1000.00, desc: 'PIX FORNECEDOR ABC MATERIAIS', ref: 'PIX021' },
+      // Subset Sum Demo: Single payment that matches a combination of ERP items
+      { date: '2026-06-22', value: -1850.00, desc: 'TED PAGAMENTO DIVERSOS FORNECEDORES', ref: 'TED022' },
     ];
-    return { fileName: 'extrato_banco_demo.csv', fileType: 'csv', normalizedRows: rows.map((r, i) => ({ _id: i, ...r })), rowCount: rows.length, parsedAt: new Date().toISOString() };
+    return { fileName: 'extrato_banco_demo.csv', fileType: 'csv', normalizedRows: rows.map((r, i) => ({ _id: i, ...r, _extra: {} })), rowCount: rows.length, parsedAt: new Date().toISOString() };
   }
 
   function generateDemoSystem() {
     const rows = [
-      { date: '2026-06-01', value: 5000.00, desc: 'RECEBIMENTO CLIENTE JOAO SILVA REF JUNHO', ref: 'REC001' },
-      { date: '2026-06-01', value: -1200.00, desc: 'PAGAMENTO FORNECEDOR ABC', ref: 'PAG002' },
-      { date: '2026-06-02', value: 3500.00, desc: 'RECEBIMENTO MARIA SANTOS VENDA PRODUTO', ref: 'REC003' },
-      { date: '2026-06-03', value: -800.00, desc: 'PAGAMENTO ENERGIA ELETRICA JUNHO 2026', ref: 'PAG004' },
-      { date: '2026-06-04', value: 1250.00, desc: 'RECEBIMENTO PEDRO OLIVEIRA SERVICO', ref: 'REC005' },
-      { date: '2026-06-05', value: -2400.00, desc: 'PAGAMENTO ALUGUEL JUNHO 2026', ref: 'PAG006' },
-      { date: '2026-06-06', value: 7800.00, desc: 'RECEBIMENTO EMPRESA XYZ CONTRATO', ref: 'REC007' },
-      { date: '2026-06-07', value: -350.00, desc: 'PAGAMENTO TELEFONE JUNHO', ref: 'PAG008' },
-      { date: '2026-06-08', value: 920.00, desc: 'RECEBIMENTO ANA COSTA CONSULTORIA', ref: 'REC009' },
-      { date: '2026-06-09', value: -1500.00, desc: 'PAGAMENTO SALARIO JOSE FUNC', ref: 'PAG010' },
-      { date: '2026-06-11', value: 4200.00, desc: 'RECEBIMENTO VENDA SERVICOS JUNHO', ref: 'REC011' },
-      { date: '2026-06-11', value: -600.00, desc: 'PAGAMENTO INTERNET PROVEDOR', ref: 'PAG012' },
-      { date: '2026-06-13', value: 2100.00, desc: 'RECEBIMENTO CARLOS FERREIRA PRODUTO', ref: 'REC013' },
-      { date: '2026-06-14', value: -980.00, desc: 'PAGAMENTO NF 12345 MERCADORIA', ref: 'PAG014' },
-      { date: '2026-06-14', value: 6300.00, desc: 'RECEBIMENTO CLIENTE VIP PREMIUM', ref: 'REC015' },
+      { date: '2026-06-01', value: 5000.00, desc: 'RECEBIMENTO CLIENTE JOAO SILVA REF JUNHO', ref: 'REC001', _extra: {} },
+      { date: '2026-06-01', value: -1200.00, desc: 'PAGAMENTO FORNECEDOR ABC', ref: 'PAG002', _extra: {} },
+      { date: '2026-06-02', value: 3500.00, desc: 'RECEBIMENTO MARIA SANTOS VENDA PRODUTO', ref: 'REC003', _extra: {} },
+      { date: '2026-06-03', value: -800.00, desc: 'PAGAMENTO ENERGIA ELETRICA JUNHO 2026', ref: 'PAG004', _extra: {} },
+      { date: '2026-06-04', value: 1250.00, desc: 'RECEBIMENTO PEDRO OLIVEIRA SERVICO', ref: 'REC005', _extra: {} },
+      { date: '2026-06-05', value: -2400.00, desc: 'PAGAMENTO ALUGUEL JUNHO 2026', ref: 'PAG006', _extra: {} },
+      { date: '2026-06-06', value: 7800.00, desc: 'RECEBIMENTO EMPRESA XYZ CONTRATO', ref: 'REC007', _extra: {} },
+      { date: '2026-06-07', value: -350.00, desc: 'PAGAMENTO TELEFONE JUNHO', ref: 'PAG008', _extra: {} },
+      { date: '2026-06-08', value: 920.00, desc: 'RECEBIMENTO ANA COSTA CONSULTORIA', ref: 'REC009', _extra: {} },
+      { date: '2026-06-09', value: -1500.00, desc: 'PAGAMENTO SALARIO JOSE FUNC', ref: 'PAG010', _extra: {} },
+      { date: '2026-06-11', value: 4200.00, desc: 'RECEBIMENTO VENDA SERVICOS JUNHO', ref: 'REC011', _extra: {} },
+      { date: '2026-06-11', value: -600.00, desc: 'PAGAMENTO INTERNET PROVEDOR', ref: 'PAG012', _extra: {} },
+      { date: '2026-06-13', value: 2100.00, desc: 'RECEBIMENTO CARLOS FERREIRA PRODUTO', ref: 'REC013', _extra: {} },
+      { date: '2026-06-14', value: -980.00, desc: 'PAGAMENTO NF 12345 MERCADORIA', ref: 'PAG014', _extra: {} },
+      { date: '2026-06-14', value: 6300.00, desc: 'RECEBIMENTO CLIENTE VIP PREMIUM', ref: 'REC015', _extra: {} },
       // Extra entries to show divergences:
-      { date: '2026-06-20', value: 2800.00, desc: 'RECEBIMENTO CLIENTE NOVO PEDIDO', ref: 'REC021' }, // not in bank
-      { date: '2026-06-16', value: -460.00, desc: 'PAGAMENTO SEGURO AUTOMOVEL', ref: 'PAG022' }, // value diff
-      { date: '2026-06-17', value: 1800.00, desc: 'RECEBIMENTO LUCIA MENDES PROJETO', ref: 'REC023' },
-      { date: '2026-06-18', value: -3200.00, desc: 'PAGAMENTO DEF COMERCIO NOTA', ref: 'PAG024' },
+      { date: '2026-06-20', value: 2800.00, desc: 'RECEBIMENTO CLIENTE NOVO PEDIDO', ref: 'REC021', _extra: {} }, // not in bank
+      { date: '2026-06-16', value: -460.00, desc: 'PAGAMENTO SEGURO AUTOMOVEL', ref: 'PAG022', _extra: {} }, // value diff
+      { date: '2026-06-17', value: 1800.00, desc: 'RECEBIMENTO LUCIA MENDES PROJETO', ref: 'REC023', _extra: {} },
+      { date: '2026-06-18', value: -3200.00, desc: 'PAGAMENTO DEF COMERCIO NOTA', ref: 'PAG024', _extra: {} },
+      // === N x 1 Demo: 3 items from same invoice NF-4587 ===
+      { date: '2026-06-20', value: -300.00, desc: 'MATERIAL ESCRITORIO ITEM 1', ref: 'NF-4587', _extra: { notaFiscal: 'NF-4587', fornecedor: 'ABC MATERIAIS' } },
+      { date: '2026-06-20', value: -250.00, desc: 'TONER IMPRESSORA ITEM 2', ref: 'NF-4587', _extra: { notaFiscal: 'NF-4587', fornecedor: 'ABC MATERIAIS' } },
+      { date: '2026-06-20', value: -450.00, desc: 'PAPEL A4 RESMA ITEM 3', ref: 'NF-4587', _extra: { notaFiscal: 'NF-4587', fornecedor: 'ABC MATERIAIS' } },
+      // === Subset Sum Demo: 3 items without common identifier, sum = 1850 ===
+      { date: '2026-06-22', value: -700.00, desc: 'PAGAMENTO FRETE TRANSPORTADORA ALPHA', ref: 'PAG030', _extra: {} },
+      { date: '2026-06-22', value: -850.00, desc: 'PAGAMENTO SERVICO MANUTENCAO', ref: 'PAG031', _extra: {} },
+      { date: '2026-06-22', value: -300.00, desc: 'PAGAMENTO MATERIAL LIMPEZA', ref: 'PAG032', _extra: {} },
     ];
-    return { fileName: 'relatorio_sistema_demo.csv', fileType: 'csv', normalizedRows: rows.map((r, i) => ({ _id: i, ...r })), rowCount: rows.length, parsedAt: new Date().toISOString() };
+    return { fileName: 'relatorio_sistema_demo.csv', fileType: 'csv', normalizedRows: rows.map((r, i) => ({ _id: i, ...r, _extra: r._extra || {} })), rowCount: rows.length, parsedAt: new Date().toISOString() };
   }
 
   return { parseFile, generateDemoBank, generateDemoSystem };

@@ -1,0 +1,24 @@
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+
+# Editor / IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Node (if ever added)
+node_modules/
+package-lock.json
+
+# Logs
+*.log
+
+# Temp
+*.tmp
+*.bak
+*.orig

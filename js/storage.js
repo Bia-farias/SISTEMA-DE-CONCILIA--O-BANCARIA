@@ -11,6 +11,7 @@ const STORAGE = (() => {
     AI_PATTERNS: 'scb_ai_patterns',
     SETTINGS: 'scb_settings',
     NOTIFICATIONS: 'scb_notifications',
+    GROUPS: 'scb_groups',
   };
 
   // ---- Generic helpers ----
@@ -102,11 +103,14 @@ const STORAGE = (() => {
       config: {
         dateTolerance: 3,
         valueTolerance: 0.5,
+        reconciliationType: '1x1',
+        groupField: 'ref',
         ...config,
       },
       bankData: bankData ? { fileName: bankData.fileName, rowCount: bankData.rowCount } : null,
       systemData: systemData ? { fileName: systemData.fileName, rowCount: systemData.rowCount } : null,
       results: [],
+      groups: [],
       summary: null,
       userId: null,
     };
@@ -118,6 +122,62 @@ const STORAGE = (() => {
     } catch {}
 
     return session;
+  }
+
+  // ---- Groups Management ----
+  function getGroups(sessionId) {
+    const allGroups = get(KEYS.GROUPS, []);
+    if (sessionId) return allGroups.filter(g => g.sessionId === sessionId);
+    return allGroups;
+  }
+
+  function saveGroup(group) {
+    const groups = get(KEYS.GROUPS, []);
+    const existing = groups.findIndex(g => g.id === group.id);
+    if (existing >= 0) {
+      groups[existing] = group;
+    } else {
+      groups.unshift(group);
+    }
+    if (groups.length > 500) groups.splice(500);
+    set(KEYS.GROUPS, groups);
+    return group;
+  }
+
+  function saveGroups(groupList, sessionId) {
+    const groups = get(KEYS.GROUPS, []);
+    for (const grp of groupList) {
+      grp.sessionId = sessionId;
+      const existing = groups.findIndex(g => g.id === grp.id);
+      if (existing >= 0) {
+        groups[existing] = grp;
+      } else {
+        groups.unshift(grp);
+      }
+    }
+    if (groups.length > 500) groups.splice(500);
+    set(KEYS.GROUPS, groups);
+  }
+
+  function deleteGroup(groupId) {
+    const groups = get(KEYS.GROUPS, []).filter(g => g.id !== groupId);
+    set(KEYS.GROUPS, groups);
+  }
+
+  function undoGroupReconciliation(groupId) {
+    const groups = get(KEYS.GROUPS, []);
+    const group = groups.find(g => g.id === groupId);
+    if (group) {
+      group.status = 'unmatched';
+      group.bankRowId = null;
+      group.reconciledAt = null;
+      group.reconciledBy = null;
+      set(KEYS.GROUPS, groups);
+
+      // Log audit
+      AUDIT.log('grupo_desconciliado', `Conciliação do grupo ${group.groupKey} desfeita`, { groupId, groupKey: group.groupKey });
+    }
+    return group;
   }
 
   // ---- Dashboard stats ----
@@ -247,6 +307,7 @@ const STORAGE = (() => {
     getSessions, saveSession, getSession, deleteSession,
     getCurrentSession, setCurrentSession, clearCurrentSession,
     createReconSession,
+    getGroups, saveGroup, saveGroups, deleteGroup, undoGroupReconciliation,
     getDashboardStats, getTrendData,
     getSettings, saveSettings,
     getNotifications, addNotification, markNotificationsRead, getUnreadCount,

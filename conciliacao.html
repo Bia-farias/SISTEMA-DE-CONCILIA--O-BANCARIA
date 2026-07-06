@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Conciliação – Sistema de Conciliação Bancária</title>
   <meta name="description" content="Workspace de conciliação bancária automática com IA.">
+  <meta name="theme-color" content="#060d1a">
+  <meta name="author" content="Bia Farias">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Conciliação – Sistema Bancário Inteligente">
+  <meta property="og:description" content="Workspace de conciliação bancária automática com 7 estratégias de comparação e inteligência artificial.">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231d4ed8'/><text y='72' x='14' font-size='60' font-family='Arial' font-weight='bold' fill='white'>CB</text></svg>">
   <link rel="stylesheet" href="css/global.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/conciliacao.css">
@@ -217,6 +224,78 @@
             </button>
           </div>
 
+          <!-- Reconciliation Type Selector -->
+          <div class="recon-type-selector">
+            <div class="recon-type-label">Tipo de Conciliação</div>
+            <div class="recon-type-options">
+              <label class="recon-type-radio active" data-type="1x1">
+                <input type="radio" name="reconType" value="1x1" checked>
+                <div class="recon-type-card">
+                  <span class="recon-type-icon">1:1</span>
+                  <span class="recon-type-name">Padrão</span>
+                  <span class="recon-type-desc">Um lançamento para um</span>
+                </div>
+              </label>
+              <label class="recon-type-radio" data-type="Nx1">
+                <input type="radio" name="reconType" value="Nx1">
+                <div class="recon-type-card">
+                  <span class="recon-type-icon">N:1</span>
+                  <span class="recon-type-name">Agrupamento ERP</span>
+                  <span class="recon-type-desc">Vários ERP → um banco</span>
+                </div>
+              </label>
+              <label class="recon-type-radio" data-type="1xN">
+                <input type="radio" name="reconType" value="1xN">
+                <div class="recon-type-card">
+                  <span class="recon-type-icon">1:N</span>
+                  <span class="recon-type-name">Agrupamento Banco</span>
+                  <span class="recon-type-desc">Um ERP → vários banco</span>
+                </div>
+              </label>
+              <label class="recon-type-radio" data-type="NxN">
+                <input type="radio" name="reconType" value="NxN">
+                <div class="recon-type-card">
+                  <span class="recon-type-icon">N:N</span>
+                  <span class="recon-type-name">Completo</span>
+                  <span class="recon-type-desc">Agrupamento nos dois lados</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Grouping Configuration (hidden for 1x1) -->
+          <div class="grouping-config" id="grouping-config" style="display:none">
+            <div class="grouping-config-header">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+              <span>Configuração do Agrupamento</span>
+            </div>
+            <div class="grouping-config-body">
+              <div class="grouping-field-row">
+                <span class="tolerance-label">Agrupar por:</span>
+                <select class="grouping-select" id="group-field">
+                  <option value="ref">Documento / Referência</option>
+                  <option value="notaFiscal">Nota Fiscal</option>
+                  <option value="fornecedor">Fornecedor</option>
+                  <option value="cliente">Cliente</option>
+                  <option value="pedido">Pedido</option>
+                  <option value="centroCusto">Centro de Custo</option>
+                  <option value="date">Data</option>
+                  <option value="desc">Descrição (prefixo)</option>
+                </select>
+              </div>
+              <div class="grouping-field-row">
+                <span class="tolerance-label">Máx. itens por combinação:</span>
+                <input type="number" class="tolerance-input" id="max-items-combo" value="15" min="2" max="20">
+              </div>
+              <div class="grouping-field-row">
+                <label class="grouping-checkbox">
+                  <input type="checkbox" id="enable-subset-sum" checked>
+                  <span>Buscar combinações de valores (Subset Sum)</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
           <div class="run-options">
             <div class="run-option active" data-option="exact">
               <div class="run-option-check"></div>
@@ -301,6 +380,14 @@
                 <svg class="run-step-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
                 Duplicidades
               </div>
+              <div class="run-step-item" id="step-grouping" style="display:none">
+                <svg class="run-step-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+                Agrupamento
+              </div>
+              <div class="run-step-item" id="step-subset" style="display:none">
+                <svg class="run-step-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+                Subset Sum
+              </div>
               <div class="run-step-item" id="step-exact">
                 <svg class="run-step-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
                 Conciliação Exata
@@ -357,6 +444,7 @@
           <div class="filter-chips" id="filter-chips">
             <span class="filter-chip active" data-filter="all">Todos</span>
             <span class="filter-chip" data-filter="CONCILIADO">✅ Conciliado</span>
+            <span class="filter-chip" data-filter="CONCILIADO_GRUPO">📦 Grupo</span>
             <span class="filter-chip" data-filter="CONCILIADO_DATA">📅 Div. Data</span>
             <span class="filter-chip" data-filter="PROVAVEL">🤖 Provável</span>
             <span class="filter-chip" data-filter="DIV_VALOR">💲 Div. Valor</span>
@@ -384,6 +472,26 @@
           </div>
 
           <div class="pagination" id="results-pagination"></div>
+        </div>
+
+        <!-- Group Results Panel -->
+        <div class="group-results-panel" id="group-results-panel" style="display:none;margin-top:var(--space-6)">
+          <div class="group-panel-header">
+            <div class="group-panel-icon">
+              <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+              </svg>
+            </div>
+            <div>
+              <div class="group-panel-title">Conciliações por Agrupamento</div>
+              <div class="group-panel-subtitle">Lançamentos agrupados automaticamente</div>
+            </div>
+            <div class="group-panel-badge">
+              <div class="ai-pulse" style="background:var(--brand-accent)"></div>
+              <span id="group-results-count">0 grupos</span>
+            </div>
+          </div>
+          <div class="group-results-list" id="group-results-list"></div>
         </div>
 
         <!-- AI Suggestions Panel -->
@@ -416,6 +524,7 @@
 <script src="js/normalizer.js"></script>
 <script src="js/parser.js"></script>
 <script src="js/ai.js"></script>
+<script src="js/grouping.js"></script>
 <script src="js/engine.js"></script>
 <script src="js/reports.js"></script>
 <script src="js/app.js"></script>
@@ -437,6 +546,24 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---- Options toggles ----
   document.querySelectorAll('.run-option').forEach(opt => {
     opt.addEventListener('click', () => opt.classList.toggle('active'));
+  });
+
+  // ---- Reconciliation Type selector ----
+  document.querySelectorAll('.recon-type-radio').forEach(radio => {
+    radio.addEventListener('click', () => {
+      document.querySelectorAll('.recon-type-radio').forEach(r => r.classList.remove('active'));
+      radio.classList.add('active');
+      radio.querySelector('input').checked = true;
+
+      const type = radio.dataset.type;
+      const groupingConfig = document.getElementById('grouping-config');
+      if (type !== '1x1') {
+        groupingConfig.style.display = 'block';
+        groupingConfig.classList.add('animate-slide-up');
+      } else {
+        groupingConfig.style.display = 'none';
+      }
+    });
   });
 
   // ---- File upload handlers ----
@@ -540,8 +667,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---- Preview ----
   function updatePreview() {
     document.getElementById('preview-section').style.display = 'block';
-
-    // Step 2 active
     setStep(2);
 
     if (bankData) {
@@ -597,11 +722,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!bankData || !systemData) return;
 
     const activeOptions = [...document.querySelectorAll('.run-option.active')].map(o => o.dataset.option);
+    const reconType = document.querySelector('input[name="reconType"]:checked')?.value || '1x1';
+
     const config = {
-      dateTolerance:    parseInt(document.getElementById('date-tolerance').value) || 3,
-      valueTolerance:   parseFloat(document.getElementById('value-tolerance').value) || 0.5,
-      enableSimilarity: activeOptions.includes('similarity'),
-      enableAI:         activeOptions.includes('ai'),
+      dateTolerance:       parseInt(document.getElementById('date-tolerance').value) || 3,
+      valueTolerance:      parseFloat(document.getElementById('value-tolerance').value) || 0.5,
+      enableSimilarity:    activeOptions.includes('similarity'),
+      enableAI:            activeOptions.includes('ai'),
+      reconciliationType:  reconType,
+      groupField:          document.getElementById('group-field')?.value || 'ref',
+      maxItemsPerCombo:    parseInt(document.getElementById('max-items-combo')?.value) || 15,
+      enableSubsetSum:     document.getElementById('enable-subset-sum')?.checked !== false,
     };
 
     // Show progress
@@ -610,28 +741,45 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('progress-section').style.display = 'block';
     setStep(3);
 
-    const runSteps = {
-      5:  ['step-dupes',  'active'],
-      20: ['step-dupes',  'done',  'step-exact',  'active'],
-      40: ['step-exact',  'done',  'step-date',   'active'],
-      60: ['step-date',   'done',  'step-sim',    'active'],
-      75: ['step-sim',    'done',  'step-val',    'active'],
-      88: ['step-val',    'done'],
-      95: ['step-ai',     'active'],
-      100:['step-ai',     'done'],
-    };
+    // Show/hide grouping steps
+    const isGrouped = reconType !== '1x1';
+    document.getElementById('step-grouping').style.display = isGrouped ? '' : 'none';
+    document.getElementById('step-subset').style.display = (isGrouped && config.enableSubsetSum) ? '' : 'none';
 
     const onProgress = (pct, label) => {
       document.getElementById('progress-fill').style.width = pct + '%';
       document.getElementById('progress-pct').textContent  = pct + '%';
       document.getElementById('progress-label').textContent = label;
 
-      const stepCmds = runSteps[pct] || [];
-      for (let i = 0; i < stepCmds.length; i += 2) {
-        const el = document.getElementById(stepCmds[i]);
-        if (el) el.className = 'run-step-item ' + stepCmds[i+1];
+      // Update step indicators based on progress
+      if (isGrouped) {
+        if (pct >= 3)  setStepStatus('step-dupes', 'active');
+        if (pct >= 8)  { setStepStatus('step-dupes', 'done'); setStepStatus('step-grouping', 'active'); }
+        if (pct >= 25) { setStepStatus('step-grouping', 'done'); if (config.enableSubsetSum) setStepStatus('step-subset', 'active'); }
+        if (pct >= 35) { if (config.enableSubsetSum) setStepStatus('step-subset', 'done'); }
+        if (pct >= 40) setStepStatus('step-exact', 'active');
+        if (pct >= 50) { setStepStatus('step-exact', 'done'); setStepStatus('step-date', 'active'); }
+        if (pct >= 60) { setStepStatus('step-date', 'done'); setStepStatus('step-sim', 'active'); }
+        if (pct >= 70) { setStepStatus('step-sim', 'done'); setStepStatus('step-val', 'active'); }
+        if (pct >= 78) setStepStatus('step-val', 'done');
+        if (pct >= 95) setStepStatus('step-ai', 'active');
+        if (pct >= 100) setStepStatus('step-ai', 'done');
+      } else {
+        if (pct >= 3)  setStepStatus('step-dupes', 'active');
+        if (pct >= 20) { setStepStatus('step-dupes', 'done'); setStepStatus('step-exact', 'active'); }
+        if (pct >= 30) { setStepStatus('step-exact', 'done'); setStepStatus('step-date', 'active'); }
+        if (pct >= 40) { setStepStatus('step-date', 'done'); setStepStatus('step-sim', 'active'); }
+        if (pct >= 50) { setStepStatus('step-sim', 'done'); setStepStatus('step-val', 'active'); }
+        if (pct >= 58) setStepStatus('step-val', 'done');
+        if (pct >= 95) setStepStatus('step-ai', 'active');
+        if (pct >= 100) setStepStatus('step-ai', 'done');
       }
     };
+
+    function setStepStatus(stepId, status) {
+      const el = document.getElementById(stepId);
+      if (el) el.className = 'run-step-item ' + status;
+    }
 
     try {
       const result = await ENGINE.reconcile(
@@ -644,15 +792,23 @@ document.addEventListener('DOMContentLoaded', () => {
       reconResults = result;
 
       // Save session
-      const session = STORAGE.createReconSession(bankData, systemData, config);
-      session.status = 'completed';
-      session.results = result.results;
-      session.summary = result.summary;
-      STORAGE.saveSession(session);
-      AUDIT.log('conciliacao_concluida', `Conciliação finalizada: ${result.summary.total} itens`, result.summary);
+      const reconSession = STORAGE.createReconSession(bankData, systemData, config);
+      reconSession.status = 'completed';
+      reconSession.results = result.results;
+      reconSession.summary = result.summary;
+      reconSession.groups = result.groups || [];
+      STORAGE.saveSession(reconSession);
+
+      // Save groups
+      if (result.groups && result.groups.length > 0) {
+        STORAGE.saveGroups(result.groups, reconSession.id);
+      }
+
+      const conciliadoTotal = (result.summary.conciliado || 0) + (result.summary.conciliadoData || 0) + (result.summary.conciliadoGrupo || 0);
+      AUDIT.log('conciliacao_concluida', `Conciliação ${reconType} finalizada: ${result.summary.total} itens, ${result.summary.conciliadoGrupo || 0} grupos`, result.summary);
       STORAGE.addNotification({
         title: 'Conciliação Concluída',
-        message: `${result.summary.conciliado} itens conciliados de ${result.summary.total} total.`,
+        message: `${conciliadoTotal} itens conciliados de ${result.summary.total} total.`,
       });
 
       await new Promise(r => setTimeout(r, 500));
@@ -668,6 +824,7 @@ document.addEventListener('DOMContentLoaded', () => {
       APP.toast(`Conciliação concluída! ${result.summary.percentual}% conciliado.`, 'success');
     } catch (err) {
       APP.toast('Erro na conciliação: ' + err.message, 'error');
+      console.error(err);
       document.getElementById('progress-section').style.display = 'none';
       document.getElementById('upload-section').style.display = 'block';
       setStep(1);
@@ -681,13 +838,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Summary bar
     const summaryBar = document.getElementById('results-summary-bar');
     const statusItems = [
-      { key: 'conciliado',       count: summary.conciliado + summary.conciliadoData, label: 'Conciliado',    css: 'conciliado' },
+      { key: 'conciliado',       count: summary.conciliado + summary.conciliadoData + (summary.conciliadoGrupo || 0), label: 'Conciliado',    css: 'conciliado' },
+      { key: 'CONCILIADO_GRUPO', count: summary.conciliadoGrupo || 0, label: 'Grupo',      css: 'grupo'      },
       { key: 'CONCILIADO_DATA',  count: summary.conciliadoData,  label: 'Div. Data',     css: 'div-data'   },
       { key: 'PROVAVEL',         count: summary.provavelCorrespondencia, label: 'Provável', css: 'provavel' },
       { key: 'DIV_VALOR',        count: summary.divergenciaValor, label: 'Div. Valor',   css: 'div-valor'  },
       { key: 'NAO_REGISTRADO',   count: summary.naoRegistrado,    label: 'Não Reg.',      css: 'nao-reg'    },
       { key: 'NAO_COMPENSADO',   count: summary.naoCompensado,    label: 'Não Comp.',     css: 'nao-comp'   },
-      { key: 'DUPLICIDADE',      count: summary.duplicidade,      label: 'Duplicidade',   css: 'duplicidade'},
     ];
 
     summaryBar.innerHTML = statusItems.map(s => `
@@ -703,6 +860,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Render table
     currentFilter = 'all';
     renderTable(results);
+
+    // Render group cards
+    const groupResults = results.filter(r => r.status === 'CONCILIADO_GRUPO' && r.type === 'group');
+    if (groupResults.length > 0) {
+      document.getElementById('group-results-panel').style.display = 'block';
+      document.getElementById('group-results-count').textContent = groupResults.length + ' grupo(s)';
+      renderGroupCards(groupResults);
+    } else {
+      document.getElementById('group-results-panel').style.display = 'none';
+    }
 
     // AI Suggestions
     if (aiSuggestions && aiSuggestions.length > 0) {
@@ -749,6 +916,112 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // ---- Group Cards Rendering ----
+  function renderGroupCards(groupResults) {
+    const listEl = document.getElementById('group-results-list');
+    listEl.innerHTML = groupResults.map(r => {
+      const group = r.group;
+      const bankRow = r.bankRow;
+      const items = r.systemRows || group?.items || [];
+      const isSubsetSum = group?.groupField === 'subset_sum';
+      const fieldLabel = isSubsetSum ? 'Combinação de Valores' : GROUPING.getFieldLabel(group?.groupField || 'ref');
+
+      return `
+        <div class="group-card" id="group-card-${r.id}">
+          <div class="group-card-header" onclick="toggleGroupCard('${r.id}')">
+            <div class="group-card-status">
+              <span class="badge badge-group badge-dot">✓ Conciliado</span>
+              <span class="group-card-type">${isSubsetSum ? '🧮 Subset Sum' : '📦 Agrupamento'}</span>
+            </div>
+            <div class="group-card-summary">
+              <div class="group-card-bank">
+                <span class="group-card-label">🏦 Banco</span>
+                <span class="group-card-value">${NORMALIZER.formatCurrency(bankRow?.value)}</span>
+                <span class="group-card-desc">${escapeHTML(bankRow?.desc || '—')}</span>
+              </div>
+              <div class="group-card-arrow">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 5v14m0 0l-4-4m4 4l4-4"/>
+                </svg>
+              </div>
+              <div class="group-card-erp">
+                <span class="group-card-label">💻 ERP — ${escapeHTML(fieldLabel)}: ${escapeHTML(group?.groupKey || '—')}</span>
+                <span class="group-card-value">${NORMALIZER.formatCurrency(group?.totalValue)}</span>
+                <span class="group-card-items-count">${items.length} iten(s)</span>
+              </div>
+            </div>
+            <div class="group-card-toggle">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 9l-7 7-7-7"/>
+              </svg>
+            </div>
+          </div>
+          <div class="group-card-body" style="display:none">
+            <table class="table group-items-table">
+              <thead>
+                <tr><th>Data</th><th>Valor</th><th>Descrição</th><th>Ref.</th></tr>
+              </thead>
+              <tbody>
+                ${items.map(item => `
+                  <tr>
+                    <td style="font-size:0.75rem;white-space:nowrap">${NORMALIZER.formatDateBR(item.date) || '—'}</td>
+                    <td style="font-size:0.8rem;font-weight:600;text-align:right;white-space:nowrap;${item.value<0?'color:var(--danger)':'color:var(--success)'}">
+                      ${NORMALIZER.formatCurrency(item.value)}
+                    </td>
+                    <td style="font-size:0.75rem;max-width:200px" class="truncate" title="${escapeHTML(item.desc || '')}">${escapeHTML(item.desc || '—')}</td>
+                    <td style="font-size:0.75rem;color:var(--text-muted)">${escapeHTML(item.ref || '—')}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+              <tfoot>
+                <tr class="group-total-row">
+                  <td style="font-weight:700;font-size:0.8rem">Total</td>
+                  <td style="font-weight:800;font-size:0.85rem;text-align:right;color:var(--brand-secondary)">
+                    ${NORMALIZER.formatCurrency(group?.totalValue)}
+                  </td>
+                  <td colspan="2" style="font-size:0.75rem;color:var(--text-muted)">${items.length} iten(s)</td>
+                </tr>
+              </tfoot>
+            </table>
+            <div class="group-card-actions">
+              <button class="btn btn-secondary btn-sm" onclick="undoGroupRecon('${group?.id}', '${r.id}')">
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                Desfazer Conciliação
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  window.toggleGroupCard = function(id) {
+    const card = document.getElementById('group-card-' + id);
+    if (!card) return;
+    const body = card.querySelector('.group-card-body');
+    const toggle = card.querySelector('.group-card-toggle');
+    if (body.style.display === 'none') {
+      body.style.display = 'block';
+      toggle.classList.add('open');
+    } else {
+      body.style.display = 'none';
+      toggle.classList.remove('open');
+    }
+  };
+
+  window.undoGroupRecon = async function(groupId, resultId) {
+    const ok = await APP.confirm('Deseja desfazer a conciliação deste grupo?');
+    if (!ok) return;
+    STORAGE.undoGroupReconciliation(groupId);
+    AUDIT.log('grupo_desconciliado', `Grupo ${groupId} desconciliado manualmente`);
+    APP.toast('Conciliação do grupo desfeita.', 'warning');
+    const card = document.getElementById('group-card-' + resultId);
+    if (card) {
+      card.style.opacity = '0.4';
+      card.style.pointerEvents = 'none';
+    }
+  };
+
   window.acceptSuggestion = function(id) {
     const sug = activeSuggestions.find(s => s.id === id);
     if (sug) {
@@ -768,14 +1041,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentFilter !== 'all' && currentFilter !== 'conciliado') {
       filtered = filtered.filter(r => r.status === currentFilter);
     } else if (currentFilter === 'conciliado') {
-      filtered = filtered.filter(r => r.status === 'CONCILIADO' || r.status === 'CONCILIADO_DATA');
+      filtered = filtered.filter(r => r.status === 'CONCILIADO' || r.status === 'CONCILIADO_DATA' || r.status === 'CONCILIADO_GRUPO');
     }
 
     if (search) {
       filtered = filtered.filter(r =>
         (r.bankRow?.desc || '').toLowerCase().includes(search) ||
         (r.systemRow?.desc || '').toLowerCase().includes(search) ||
-        (r.bankRow?.ref || '').toLowerCase().includes(search)
+        (r.bankRow?.ref || '').toLowerCase().includes(search) ||
+        (r.note || '').toLowerCase().includes(search) ||
+        (r.group?.groupKey || '').toLowerCase().includes(search)
       );
     }
 
@@ -787,32 +1062,46 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('results-count').textContent = `${total} resultado(s)`;
 
     const statusBadges = {
-      CONCILIADO:      '<span class="badge badge-success badge-dot">Conciliado</span>',
-      CONCILIADO_DATA: '<span class="badge badge-warning badge-dot">Div. Data</span>',
-      PROVAVEL:        '<span class="badge badge-brand badge-dot">Provável</span>',
-      DIV_VALOR:       '<span class="badge badge-pending badge-dot">Div. Valor</span>',
-      NAO_REGISTRADO:  '<span class="badge badge-danger badge-dot">Não Registrado</span>',
-      NAO_COMPENSADO:  '<span class="badge badge-info badge-dot">Não Compensado</span>',
-      DUPLICIDADE:     '<span class="badge badge-secondary badge-dot">Duplicidade</span>',
+      CONCILIADO:       '<span class="badge badge-success badge-dot">Conciliado</span>',
+      CONCILIADO_DATA:  '<span class="badge badge-warning badge-dot">Div. Data</span>',
+      CONCILIADO_GRUPO: '<span class="badge badge-group badge-dot">Grupo</span>',
+      PROVAVEL:         '<span class="badge badge-brand badge-dot">Provável</span>',
+      DIV_VALOR:        '<span class="badge badge-pending badge-dot">Div. Valor</span>',
+      NAO_REGISTRADO:   '<span class="badge badge-danger badge-dot">Não Registrado</span>',
+      NAO_COMPENSADO:   '<span class="badge badge-info badge-dot">Não Compensado</span>',
+      DUPLICIDADE:      '<span class="badge badge-secondary badge-dot">Duplicidade</span>',
     };
 
     const tbody = document.getElementById('results-tbody');
-    tbody.innerHTML = paged.map(r => `
-      <tr>
-        <td>${statusBadges[r.status] || r.status}</td>
-        <td style="white-space:nowrap;font-size:0.8rem">${NORMALIZER.formatDateBR(r.bankRow?.date) || '—'}</td>
-        <td style="text-align:right;font-size:0.85rem;font-weight:600;white-space:nowrap;${r.bankRow?.value<0?'color:var(--danger)':'color:var(--success)'}">
-          ${r.bankRow?.value !== undefined && r.bankRow?.value !== null ? NORMALIZER.formatCurrency(r.bankRow.value) : '—'}
-        </td>
-        <td style="max-width:180px;font-size:0.8rem" class="truncate" title="${escapeHTML(r.bankRow?.desc || '')}">${escapeHTML(r.bankRow?.desc || '—')}</td>
-        <td style="white-space:nowrap;font-size:0.8rem">${NORMALIZER.formatDateBR(r.systemRow?.date) || '—'}</td>
-        <td style="text-align:right;font-size:0.85rem;font-weight:600;white-space:nowrap;${r.systemRow?.value<0?'color:var(--danger)':'color:var(--success)'}">
-          ${r.systemRow?.value !== undefined && r.systemRow?.value !== null ? NORMALIZER.formatCurrency(r.systemRow.value) : '—'}
-        </td>
-        <td style="max-width:180px;font-size:0.8rem" class="truncate" title="${escapeHTML(r.systemRow?.desc || '')}">${escapeHTML(r.systemRow?.desc || '—')}</td>
-        <td style="font-size:0.75rem;color:var(--text-muted)">${escapeHTML(r.note || '')}</td>
-      </tr>
-    `).join('');
+    tbody.innerHTML = paged.map(r => {
+      // For group results, show summary info in system columns
+      const sysDesc = r.status === 'CONCILIADO_GRUPO' && r.systemRows
+        ? `${r.systemRows.length} itens agrupados`
+        : escapeHTML(r.systemRow?.desc || '—');
+      const sysValue = r.status === 'CONCILIADO_GRUPO' && r.group
+        ? NORMALIZER.formatCurrency(r.group.totalValue)
+        : (r.systemRow?.value !== undefined && r.systemRow?.value !== null ? NORMALIZER.formatCurrency(r.systemRow.value) : '—');
+      const sysDate = r.status === 'CONCILIADO_GRUPO' && r.group
+        ? NORMALIZER.formatDateBR(r.group.date)
+        : (NORMALIZER.formatDateBR(r.systemRow?.date) || '—');
+
+      return `
+        <tr class="${r.status === 'CONCILIADO_GRUPO' ? 'row-group' : ''}">
+          <td>${statusBadges[r.status] || r.status}</td>
+          <td style="white-space:nowrap;font-size:0.8rem">${NORMALIZER.formatDateBR(r.bankRow?.date) || '—'}</td>
+          <td style="text-align:right;font-size:0.85rem;font-weight:600;white-space:nowrap;${r.bankRow?.value<0?'color:var(--danger)':'color:var(--success)'}">
+            ${r.bankRow?.value !== undefined && r.bankRow?.value !== null ? NORMALIZER.formatCurrency(r.bankRow.value) : '—'}
+          </td>
+          <td style="max-width:180px;font-size:0.8rem" class="truncate" title="${escapeHTML(r.bankRow?.desc || '')}">${escapeHTML(r.bankRow?.desc || '—')}</td>
+          <td style="white-space:nowrap;font-size:0.8rem">${sysDate}</td>
+          <td style="text-align:right;font-size:0.85rem;font-weight:600;white-space:nowrap;color:var(--brand-secondary)">
+            ${sysValue}
+          </td>
+          <td style="max-width:180px;font-size:0.8rem" class="truncate" title="${sysDesc}">${sysDesc}</td>
+          <td style="font-size:0.75rem;color:var(--text-muted)">${escapeHTML(r.note || '')}</td>
+        </tr>
+      `;
+    }).join('');
 
     // Pagination
     const pag = document.getElementById('results-pagination');
@@ -880,6 +1169,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('bank-drop-zone').classList.remove('has-file');
     document.getElementById('system-drop-zone').classList.remove('has-file');
     document.getElementById('preview-section').style.display = 'none';
+    document.getElementById('group-results-panel').style.display = 'none';
+    document.getElementById('ai-panel').style.display = 'none';
     document.getElementById('btn-run').disabled = true;
     setStep(1);
   });
