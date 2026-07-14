@@ -118,7 +118,7 @@ const PARSER = (() => {
   }
 
   // ---- Main entry point ----
-  async function parseFile(file) {
+  async function parseFile(file, onOCRProgress) {
     const ext = file.name.split('.').pop().toLowerCase();
     let result;
 
@@ -128,6 +128,12 @@ const PARSER = (() => {
       result = await parseXLSX(file);
     } else if (ext === 'ofx' || ext === 'qfx') {
       result = await parseOFX(file);
+    } else if (['pdf', 'jpg', 'jpeg', 'png'].includes(ext)) {
+      // Retorna objeto especial com múltiplas tabelas para preview modal
+      const ocrResult = await OCR_ENGINE.processFile(file, onOCRProgress);
+      // O caller (conciliacao.html) deve exibir o modal de preview
+      // e chamar OCR_ENGINE.buildParserResult() após confirmação
+      return { _ocrRaw: ocrResult, fileType: ext, fileName: file.name };
     } else {
       throw new Error(`Formato não suportado: .${ext}`);
     }

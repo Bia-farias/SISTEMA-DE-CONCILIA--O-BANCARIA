@@ -22,3 +22,7 @@ package-lock.json
 *.tmp
 *.bak
 *.orig
+
+# ⚠️ CHAVES DE API – NUNCA SUBIR PARA O GIT
+js/config.js
+.env

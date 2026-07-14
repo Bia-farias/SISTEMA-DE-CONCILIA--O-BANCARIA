@@ -48,8 +48,10 @@
 - **Subset Sum Algorithm** — encontra combinações de lançamentos que totalizam um valor correspondente
 - **Configuração flexível** — tolerância de data (dias) e valor (%) ajustáveis
 
-### 🤖 Inteligência Artificial
-- Score de confiança em tempo real para cada correspondência
+### 🤖 Inteligência Artificial & OCR
+- **Groq Vision (Llama 4 Scout)** — Leitura inteligente de imagens e documentos
+- **Extração inteligente de tabelas** de PDFs escaneados ou digitais, imagens e fotos (JPEG/PNG)
+- Score de confiança em tempo real para cada correspondência e célula extraída
 - Sugestões inteligentes baseadas em padrões de texto e valor
 - Similaridade de texto com algoritmo de distância de Levenshtein
 - Aprendizado de padrões de conciliação anteriores
@@ -61,11 +63,17 @@
 - Saudação dinâmica por horário do dia
 
 ### 📁 Importação Multi-formato
-- **OFX/QFX** — extrato bancário padrão
-- **CSV** — arquivos delimitados com detecção automática de separador
-- **XLSX/XLS** — planilhas Excel
+- **PDF, JPEG e PNG** — Processamento inteligente de extratos em papel/fotos e relatórios em PDF
+- **OFX/QFX** — Extrato bancário padrão digital
+- **CSV** — Arquivos delimitados com detecção automática de separador
+- **XLSX/XLS** — Planilhas Excel
 - Drag & drop para upload de arquivos
 - Parser inteligente com normalização automática de datas e valores
+
+### 🗄️ Integração Cloud & Banco de Dados
+- **Supabase (PostgreSQL)** — Persistência real de transações e logs de importação na nuvem
+- RLS (Row Level Security) configurado para garantir a integridade dos dados
+- Autenticação e logs persistentes de auditoria
 
 ### 📄 Relatórios e Exportação
 - Histórico de todas as sessões de conciliação
@@ -93,46 +101,50 @@
 
 | Tecnologia | Uso |
 |---|---|
-| **HTML5** | Estrutura semântica e SEO |
-| **CSS3** | Design system com custom properties, glassmorphism, animações |
-| **JavaScript (ES6+)** | Lógica de negócio modular (11 módulos) |
+| **HTML5 / CSS3** | Estrutura semântica, Design System, Glassmorphism e responsividade |
+| **JavaScript (ES6+)** | Lógica de negócio modularizada e interações dinâmicas |
+| **Groq API** | OCR de documentos e visão computacional (Llama 4 Scout) |
+| **Supabase** | Banco de dados PostgreSQL em nuvem para armazenamento persistente |
+| **PDF.js** | Renderização e processamento local de documentos PDF |
 | **Chart.js** | Gráficos interativos (tendência, donut) |
-| **PapaParse** | Parser de CSV |
-| **SheetJS** | Leitura e escrita de XLSX |
-| **jsPDF** | Geração de relatórios em PDF |
-| **Web Crypto API** | Hash de senhas SHA-256 |
-| **LocalStorage** | Persistência de dados no navegador |
+| **PapaParse** | Parser rápido de CSV |
+| **SheetJS** | Leitura e escrita de XLSX/XLS |
+| **jsPDF** | Geração e exportação de relatórios em PDF |
 
-> 💡 **100% client-side** — Não precisa de backend, banco de dados ou servidor. Tudo roda no navegador!
+> 💡 **Client-Side Integrado** — A lógica principal do frontend roda no navegador do usuário, comunicando-se de forma segura e rápida com as APIs e banco de dados Cloud.
 
 ---
 
 ## 📖 Como Usar
 
-### 🌐 Demo Online
+### 💻 Instalação e Execução Local
 
-Acesse a [**demo ao vivo**](https://bia-farias.github.io/SISTEMA-DE-CONCILIA--O-BANCARIA/) e use as credenciais abaixo:
+1. **Clone o repositório:**
+   ```bash
+   git clone https://github.com/Bia-farias/SISTEMA-DE-CONCILIA--O-BANCARIA.git
+   cd SISTEMA-DE-CONCILIA--O-BANCARIA
+   ```
 
-| Perfil | Usuário | Senha |
-|---|---|---|
-| 🔴 Administrador | `admin` | `admin123` |
-| 🔵 Analista | `analista` | `analista123` |
-| 🟣 Auditor | `auditor` | `auditor123` |
+2. **Execute o script de configuração inicial:**
+   - **No Windows (PowerShell):**
+     ```powershell
+     .\scripts\setup.ps1
+     ```
+   - **No Linux / macOS (Terminal):**
+     ```bash
+     chmod +x scripts/setup.sh
+     ./scripts/setup.sh
+     ```
 
-### 💻 Rodando Localmente
+3. **Configure suas credenciais:**
+   Abra o arquivo recém-criado `js/config.js` e cole suas chaves da API **Groq** e **Supabase**.
+   *(Siga o guia detalhado em [docs/CONFIGURACAO.md](docs/CONFIGURACAO.md)).*
 
-```bash
-# Clone o repositório
-git clone https://github.com/Bia-farias/SISTEMA-DE-CONCILIA--O-BANCARIA.git
+4. **Crie as tabelas no Supabase:**
+   Copie e execute o script SQL de [`docs/supabase_schema.sql`](docs/supabase_schema.sql) no SQL Editor do seu projeto Supabase.
 
-# Acesse a pasta
-cd SISTEMA-DE-CONCILIA--O-BANCARIA
-
-# Abra no navegador (ou use Live Server no VS Code)
-start index.html
-```
-
-> **Dica:** Para melhor experiência, use a extensão [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) no VS Code.
+5. **Abra o sistema:**
+   Abra `index.html` no seu navegador (recomendamos utilizar a extensão **Live Server** no VS Code para desenvolvimento).
 
 ---
 
@@ -142,49 +154,60 @@ start index.html
 📦 SISTEMA-DE-CONCILIAÇÃO-BANCARIA
 ├── 📄 index.html            # Tela de Login
 ├── 📄 dashboard.html        # Dashboard com KPIs e gráficos
-├── 📄 conciliacao.html      # Workspace de conciliação
-├── 📄 relatorios.html       # Histórico e exportação
-├── 📄 usuarios.html         # Gestão de usuários (admin)
+├── 📄 conciliacao.html      # Workspace de conciliação (Uploads, OCR & Resultados)
+├── 📄 relatorios.html       # Histórico e exportação de relatórios
+├── 📄 usuarios.html         # Gestão de usuários do sistema (admin)
 │
 ├── 📁 css/
 │   ├── 🎨 global.css        # Design system (tokens, reset, componentes base)
 │   ├── 🎨 auth.css          # Estilos da tela de login
-│   ├── 🎨 components.css    # Sidebar, header, cards, charts
-│   ├── 🎨 conciliacao.css   # Upload, preview, resultados
-│   └── 🎨 dashboard.css     # KPIs, welcome, charts
+│   ├── 🎨 components.css    # Sidebar, header, cards, charts, OCR steps
+│   ├── 🎨 conciliacao.css   # Upload, preview, resultados da conciliação
+│   └── 🎨 dashboard.css     # KPIs, welcome, gráficos do dashboard
 │
 ├── 📁 js/
-│   ├── ⚙️ storage.js        # Persistência (localStorage) + Audit Log
-│   ├── 🔐 auth.js           # Autenticação, sessão, RBAC
-│   ├── 🔧 normalizer.js     # Normalização de datas, valores, moedas
-│   ├── 📂 parser.js         # Parser OFX, CSV, XLSX + dados demo
-│   ├── 🤖 ai.js             # Motor de IA (similaridade, sugestões)
-│   ├── 📦 grouping.js       # Agrupamento N:1, 1:N, N:N + Subset Sum
-│   ├── 🔄 engine.js         # Motor de conciliação (7 estratégias)
-│   ├── 📊 charts.js         # Gráficos Chart.js (trend, donut)
-│   ├── 📄 reports.js        # Exportação Excel + PDF
-│   ├── 🖥️ app.js            # UI helpers, toasts, sidebar, logout
-│   └── 👥 usuarios.js       # CRUD de usuários
+│   ├── 🔑 config.js         # Configurações de chaves privadas (ignorado pelo Git)
+│   ├── 🔑 config.example.js # Template de configuração de chaves para desenvolvedores
+│   ├── ⚙️ storage.js        # Persistência local (localStorage) + Logs de Auditoria
+│   ├── 🔐 auth.js           # Controle de autenticação, sessão e RBAC
+│   ├── 🗄️ db.js             # Módulo de integração e consultas ao Supabase DB
+│   ├── 🤖 ocr.js            # Módulo de processamento de imagem/PDF via Groq Vision
+│   ├── 🔧 normalizer.js     # Normalização de datas, valores monetários e textos
+│   ├── 📂 parser.js         # Parser para OFX, CSV, XLSX, XLS e gerador de dados demo
+│   ├── 🧠 ai.js             # Motor de comparação inteligente (similaridade, sugestões)
+│   ├── 📦 grouping.js       # Agrupamento (N:1, 1:N, N:N) e algoritmo Subset Sum
+│   ├── 🔄 engine.js         # Motor geral de conciliação (7 estratégias sequenciais)
+│   ├── 📊 charts.js         # Geração de gráficos do Chart.js
+│   ├── 📄 reports.js        # Utilitários de exportação de dados (Excel + PDF)
+│   ├── 🖥️ app.js            # Controladores de UI, Toasts, Sidebar, Notificações
+│   └── 👥 usuarios.js       # CRUD e gerenciamento de permissões de usuários
 │
 ├── 📁 docs/
+│   ├── 📄 CONFIGURACAO.md   # Guia detalhado de setup do Supabase e Groq
+│   ├── 🗄️ supabase_schema.sql# Estrutura de tabelas e views para o PostgreSQL
 │   ├── 🖼️ screenshot-login.png
 │   └── 🖼️ screenshot-dashboard.png
 │
-├── 📄 .gitignore
-├── 📄 LICENSE               # MIT
-└── 📄 README.md
+├── 📁 scripts/
+│   ├── 📜 setup.ps1         # Script de setup de configuração para Windows
+│   └── 📜 setup.sh          # Script de setup de configuração para Linux/macOS
+│
+├── 📄 .env.example          # Template das variáveis de ambiente
+├── 📄 .gitignore            # Regras de ocultação de arquivos sensíveis
+├── 📄 LICENSE               # MIT License
+└── 📄 README.md             # Documentação principal
 ```
 
 ---
 
 ## 🔒 Segurança
 
-- Senhas hasheadas com **SHA-256** via Web Crypto API
-- Sessões com expiração automática de **8 horas**
-- **RBAC** com 3 níveis de acesso
-- Whitelist de campos ao criar/editar usuários (prevenção de privilege escalation)
-- Validação de perfil em todas as rotas
-- Log de auditoria com rastreamento de ações
+- Chaves de API mantidas de forma segura em arquivos ignorados pelo Git (`js/config.js` e `.env`).
+- Senhas criptografadas com **SHA-256** utilizando a API nativa Web Crypto.
+- Sessões protegidas no navegador com expiração automática de **8 horas**.
+- **RBAC (Role-Based Access Control)** com três níveis hierárquicos distintos (Administrador, Analista e Auditor).
+- Whitelist de propriedades em payloads de usuários para evitar escalação de privilégios.
+- Log de auditoria persistente monitorando todas as ações críticas dos usuários.
 
 ---
 
@@ -198,6 +221,7 @@ Este projeto está licenciado sob a [MIT License](LICENSE).
 
 **Feito com 💙 por [Bia Farias](https://github.com/Bia-farias)**
 
-⭐ Se este projeto foi útil, considere dar uma estrela!
+⭐ Se este projeto foi útil, considere dar uma estrela no repositório!
 
 </div>
+

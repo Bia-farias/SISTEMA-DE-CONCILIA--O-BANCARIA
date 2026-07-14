@@ -24,6 +24,17 @@
   <!-- jsPDF -->
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" integrity="sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.31/dist/jspdf.plugin.autotable.min.js" integrity="sha384-vuyrTV5nkscLp1knFvt+FIHfKKzmROBq5reruhMRslauj54mW+l2B8b6szMN6lCL" crossorigin="anonymous"></script>
+  <!-- PDF.js v3 (build UMD – exporta pdfjsLib globalmente) -->
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+  <script>
+    // Configurar o worker do PDF.js assim que a lib carregar
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+    }
+  </script>
+  <!-- Supabase JS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
 <body>
 <div id="toast-container" class="toast-container"></div>
@@ -171,8 +182,11 @@
                 <span class="format-badge">OFX</span>
                 <span class="format-badge">CSV</span>
                 <span class="format-badge">XLSX</span>
+                <span class="format-badge" style="background:rgba(239,68,68,0.15);color:#ef4444">PDF</span>
+                <span class="format-badge" style="background:rgba(168,85,247,0.15);color:#a855f7">JPEG</span>
+                <span class="format-badge" style="background:rgba(168,85,247,0.15);color:#a855f7">PNG</span>
               </div>
-              <input type="file" id="bank-file" accept=".ofx,.qfx,.csv,.xlsx,.xls" style="display:none">
+              <input type="file" id="bank-file" accept=".ofx,.qfx,.csv,.xlsx,.xls,.pdf,.jpg,.jpeg,.png" style="display:none">
             </div>
             <div id="bank-file-info" style="display:none"></div>
           </div>
@@ -201,8 +215,11 @@
               <div class="upload-zone-formats">
                 <span class="format-badge">CSV</span>
                 <span class="format-badge">XLSX</span>
+                <span class="format-badge" style="background:rgba(239,68,68,0.15);color:#ef4444">PDF</span>
+                <span class="format-badge" style="background:rgba(168,85,247,0.15);color:#a855f7">JPEG</span>
+                <span class="format-badge" style="background:rgba(168,85,247,0.15);color:#a855f7">PNG</span>
               </div>
-              <input type="file" id="system-file" accept=".csv,.xlsx,.xls" style="display:none">
+              <input type="file" id="system-file" accept=".csv,.xlsx,.xls,.pdf,.jpg,.jpeg,.png" style="display:none">
             </div>
             <div id="system-file-info" style="display:none"></div>
           </div>
@@ -519,9 +536,133 @@
   </div>
 </div>
 
+<!-- ============================================================ -->
+<!-- MODAL: OCR Preview – Seleção de Tabelas Extraídas            -->
+<!-- ============================================================ -->
+<div id="ocr-modal-overlay" class="modal-overlay" style="display:none;z-index:9000">
+  <div class="modal" style="max-width:860px;width:95%;max-height:90vh;overflow:hidden;display:flex;flex-direction:column">
+
+    <!-- Header -->
+    <div class="modal-header" style="flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#4f46e5);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+        </div>
+        <div>
+          <h3 class="modal-title" style="margin:0">Leitura de Documento por IA</h3>
+          <p style="margin:0;font-size:0.78rem;color:var(--text-muted)">Groq Vision · Llama 4 Scout</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress Area (visível durante processamento) -->
+    <div id="ocr-progress-area" style="padding:24px 28px;flex-shrink:0">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <!-- File Preview -->
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface-2);border-radius:8px">
+          <div id="ocr-file-icon" style="width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px">📄</div>
+          <div>
+            <div id="ocr-file-name" style="font-weight:600;font-size:0.9rem">Carregando...</div>
+            <div id="ocr-file-size" style="font-size:0.75rem;color:var(--text-muted)"></div>
+          </div>
+          <div id="ocr-confidence-badge" style="margin-left:auto;display:none">
+            <span id="ocr-confidence-text" style="font-size:0.8rem;font-weight:700;padding:4px 10px;border-radius:20px;background:rgba(16,185,129,0.15);color:#10b981"></span>
+          </div>
+        </div>
+
+        <!-- Steps -->
+        <div style="display:flex;flex-direction:column;gap:6px" id="ocr-steps">
+          <div class="ocr-step" id="ocr-step-init" data-status="pending">
+            <span class="ocr-step-icon">⏳</span>
+            <span class="ocr-step-text">Carregando arquivo...</span>
+          </div>
+          <div class="ocr-step" id="ocr-step-pdf" data-status="pending" style="display:none">
+            <span class="ocr-step-icon">⏳</span>
+            <span class="ocr-step-text">Processando PDF...</span>
+          </div>
+          <div class="ocr-step" id="ocr-step-groq" data-status="pending">
+            <span class="ocr-step-icon">⏳</span>
+            <span class="ocr-step-text">Enviando para Groq Vision...</span>
+          </div>
+          <div class="ocr-step" id="ocr-step-parse" data-status="pending">
+            <span class="ocr-step-icon">⏳</span>
+            <span class="ocr-step-text">Detectando tabelas...</span>
+          </div>
+          <div class="ocr-step" id="ocr-step-normalize" data-status="pending">
+            <span class="ocr-step-icon">⏳</span>
+            <span class="ocr-step-text">Normalizando dados...</span>
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-bar" style="margin-top:4px">
+          <div class="progress-fill" id="ocr-progress-fill" style="width:0%;background:linear-gradient(90deg,#7c3aed,#4f46e5)"></div>
+        </div>
+        <div id="ocr-progress-label" style="font-size:0.78rem;color:var(--text-muted);text-align:center">Iniciando...</div>
+      </div>
+    </div>
+
+    <!-- Results Area (visível após processamento) -->
+    <div id="ocr-results-area" style="display:none;flex:1;overflow:hidden;display:flex;flex-direction:column">
+
+      <!-- Info bar -->
+      <div style="padding:12px 28px;background:rgba(124,58,237,0.08);border-bottom:1px solid var(--border-color);flex-shrink:0;display:flex;align-items:center;gap:16px">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#7c3aed" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span style="font-size:0.85rem;color:var(--text-secondary)">
+          <span id="ocr-tables-count" style="font-weight:700;color:var(--text-primary)">0</span> tabela(s) identificada(s) ·
+          <span id="ocr-rows-count" style="font-weight:700;color:var(--text-primary)">0</span> registros no total ·
+          Tipo: <span id="ocr-doc-type" style="font-weight:700;color:var(--text-primary)">—</span>
+        </span>
+        <span id="ocr-db-status" style="margin-left:auto;font-size:0.75rem;color:var(--text-muted)"></span>
+      </div>
+
+      <!-- Tables list (scrollable) -->
+      <div style="flex:1;overflow-y:auto;padding:16px 28px 0" id="ocr-tables-list">
+        <!-- Preenchido dinamicamente -->
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer" style="flex-shrink:0;border-top:1px solid var(--border-color);margin-top:0">
+        <div style="display:flex;align-items:center;gap:8px;font-size:0.78rem;color:var(--text-muted)">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Selecione as tabelas que deseja importar
+        </div>
+        <div style="display:flex;gap:10px;margin-left:auto">
+          <button class="btn btn-secondary" id="ocr-btn-cancel">Cancelar</button>
+          <button class="btn btn-primary" id="ocr-btn-confirm" style="background:linear-gradient(135deg,#7c3aed,#4f46e5);border-color:transparent">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            Confirmar e Importar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Area -->
+    <div id="ocr-error-area" style="display:none;padding:24px 28px">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center">
+        <div style="width:56px;height:56px;border-radius:50%;background:rgba(239,68,68,0.12);display:flex;align-items:center;justify-content:center">
+          <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#ef4444" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+        <div>
+          <div style="font-weight:700;margin-bottom:4px;color:var(--danger)">Erro na Leitura</div>
+          <div id="ocr-error-message" style="font-size:0.85rem;color:var(--text-muted)"></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:8px">
+          <button class="btn btn-secondary" id="ocr-btn-error-cancel">Fechar</button>
+          <button class="btn btn-primary" id="ocr-btn-retry">Tentar Novamente</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="js/config.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/normalizer.js"></script>
+<script src="js/ocr.js"></script>
+<script src="js/db.js"></script>
 <script src="js/parser.js"></script>
 <script src="js/ai.js"></script>
 <script src="js/grouping.js"></script>
@@ -590,10 +731,21 @@ document.addEventListener('DOMContentLoaded', () => {
   setupDropZone('bank-drop-zone',   'bank-file',   'bank');
   setupDropZone('system-drop-zone', 'system-file', 'system');
 
+  // ---- OCR file types ----
+  const OCR_TYPES = ['pdf', 'jpg', 'jpeg', 'png'];
+
   async function handleFile(file, dataKey, zoneId, inputId) {
     const zone = document.getElementById(zoneId);
-    zone.style.pointerEvents = 'none';
+    const ext  = file.name.split('.').pop().toLowerCase();
 
+    if (OCR_TYPES.includes(ext)) {
+      // Fluxo OCR: abre modal e processa via Groq Vision
+      await handleOCRFile(file, dataKey, zoneId);
+      return;
+    }
+
+    // Fluxo normal (CSV, XLSX, OFX)
+    zone.style.pointerEvents = 'none';
     try {
       APP.toast(`Carregando ${file.name}...`, 'info', 2000);
       const parsed = await PARSER.parseFile(file);
@@ -618,6 +770,325 @@ document.addEventListener('DOMContentLoaded', () => {
       zone.style.pointerEvents = '';
     }
   }
+
+  // ================================================================
+  // OCR Modal Controller
+  // ================================================================
+
+  let _ocrCurrentFile    = null;
+  let _ocrCurrentDataKey = null;
+  let _ocrCurrentZoneId  = null;
+  let _ocrResult         = null;
+
+  function openOCRModal(file, dataKey, zoneId) {
+    _ocrCurrentFile    = file;
+    _ocrCurrentDataKey = dataKey;
+    _ocrCurrentZoneId  = zoneId;
+    _ocrResult         = null;
+
+    const ext = file.name.split('.').pop().toLowerCase();
+    const icons = { pdf: '📄', jpg: '🖼️', jpeg: '🖼️', png: '🖼️' };
+
+    // Configurar header do modal
+    document.getElementById('ocr-file-name').textContent = file.name;
+    document.getElementById('ocr-file-size').textContent = (file.size / 1024).toFixed(1) + ' KB';
+    document.getElementById('ocr-file-icon').textContent = icons[ext] || '📄';
+    document.getElementById('ocr-confidence-badge').style.display = 'none';
+
+    // Mostrar/ocultar step de PDF
+    document.getElementById('ocr-step-pdf').style.display = ext === 'pdf' ? 'flex' : 'none';
+
+    // Reset de estado
+    ['ocr-step-init','ocr-step-pdf','ocr-step-groq','ocr-step-parse','ocr-step-normalize'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.dataset.status = 'pending'; el.querySelector('.ocr-step-icon').textContent = '⏳'; }
+    });
+    document.getElementById('ocr-progress-fill').style.width = '0%';
+    document.getElementById('ocr-progress-label').textContent = 'Iniciando...';
+
+    // Mostrar área de progresso, ocultar resultado e erro
+    document.getElementById('ocr-progress-area').style.display = 'block';
+    document.getElementById('ocr-results-area').style.display  = 'none';
+    document.getElementById('ocr-error-area').style.display    = 'none';
+
+    // Abrir modal
+    const overlay = document.getElementById('ocr-modal-overlay');
+    overlay.style.display = 'flex';
+    overlay.classList.add('active');
+  }
+
+  function closeOCRModal() {
+    const overlay = document.getElementById('ocr-modal-overlay');
+    overlay.style.display = 'none';
+    overlay.classList.remove('active');
+    _ocrCurrentFile    = null;
+    _ocrCurrentDataKey = null;
+    _ocrCurrentZoneId  = null;  // Fix #5: zerar zoneId também
+    _ocrResult         = null;
+  }
+
+  function handleOCRProgress(step, message, pct) {
+    // Atualizar barra de progresso
+    document.getElementById('ocr-progress-fill').style.width  = pct + '%';
+    document.getElementById('ocr-progress-label').textContent = message;
+
+    // Mapeamento step → id do elemento
+    const stepMap = {
+      init:      'ocr-step-init',
+      pdf:       'ocr-step-pdf',
+      groq:      'ocr-step-groq',
+      parse:     'ocr-step-parse',
+      normalize: 'ocr-step-normalize',
+      done:      'ocr-step-normalize',
+    };
+
+    const stepId = stepMap[step];
+    if (!stepId) return;
+
+    // Marcar etapas anteriores como concluídas
+    const allSteps = ['ocr-step-init','ocr-step-pdf','ocr-step-groq','ocr-step-parse','ocr-step-normalize'];
+    const currentIdx = allSteps.indexOf(stepId);
+    allSteps.forEach((id, i) => {
+      const el = document.getElementById(id);
+      if (!el || el.style.display === 'none') return;
+      if (i < currentIdx) {
+        el.dataset.status = 'done';
+        el.querySelector('.ocr-step-icon').textContent = '✅';
+      } else if (i === currentIdx) {
+        el.dataset.status = 'active';
+        el.querySelector('.ocr-step-icon').textContent = step === 'done' ? '✅' : '⚙️';
+      }
+    });
+  }
+
+  function renderOCRTables(ocrResult) {
+    const listEl = document.getElementById('ocr-tables-list');
+    listEl.innerHTML = '';
+
+    ocrResult.tables.forEach((table, idx) => {
+      const confColor = table.confidence >= 90 ? '#10b981' :
+                        table.confidence >= 70 ? '#f59e0b' : '#ef4444';
+
+      const previewRows = table.rows.slice(0, 5);
+      const hasMore     = table.rows.length > 5;
+
+      const card = document.createElement('div');
+      card.style.cssText = `
+        border:2px solid var(--border-color);border-radius:12px;
+        margin-bottom:16px;overflow:hidden;
+        transition:border-color .2s;cursor:pointer;
+      `;
+      card.dataset.tableIdx = idx;
+
+      card.innerHTML = `
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface-2)">
+          <input type="checkbox" id="ocr-table-check-${idx}"
+            style="width:18px;height:18px;cursor:pointer;accent-color:#7c3aed"
+            ${idx === 0 ? 'checked' : ''}>
+          <label for="ocr-table-check-${idx}" style="font-weight:700;font-size:0.9rem;cursor:pointer;flex:1">
+            ${escapeHTML(table.title || `Tabela ${idx + 1}`)}
+          </label>
+          <span style="font-size:0.78rem;padding:2px 10px;border-radius:20px;
+            background:rgba(124,58,237,0.1);color:#7c3aed;font-weight:600">
+            ${table.rowCount} registros
+          </span>
+          ${table.confidence ? `<span style="font-size:0.75rem;font-weight:700;color:${confColor}">
+            ${table.confidence}% confiança
+          </span>` : ''}
+        </div>
+        <div style="overflow-x:auto;padding:0">
+          <table class="table" style="margin:0;font-size:0.75rem">
+            <thead>
+              <tr>${table.headers.map(h => `<th style="white-space:nowrap">${escapeHTML(h)}</th>`).join('')}</tr>
+            </thead>
+            <tbody>
+              ${previewRows.map(row => `
+                <tr>
+                  ${table.headers.map((h, ci) => {
+                    const val = row._raw?.[h] ?? row[h] ?? '';
+                    return `<td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+                      title="${escapeHTML(String(val))}">${escapeHTML(String(val || '—'))}</td>`;
+                  }).join('')}
+                </tr>
+              `).join('')}
+              ${hasMore ? `
+                <tr>
+                  <td colspan="${table.headers.length}" style="text-align:center;color:var(--text-muted);font-style:italic">
+                    + ${table.rows.length - 5} registros adicionais...
+                  </td>
+                </tr>
+              ` : ''}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      // Clicar no card seleciona/deseleciona
+      card.addEventListener('click', (e) => {
+        if (e.target.type === 'checkbox' || e.target.tagName === 'LABEL') return;
+        const cb = card.querySelector('input[type=checkbox]');
+        cb.checked = !cb.checked;
+        card.style.borderColor = cb.checked ? '#7c3aed' : 'var(--border-color)';
+      });
+
+      const cb = card.querySelector('input[type=checkbox]');
+      cb.addEventListener('change', () => {
+        card.style.borderColor = cb.checked ? '#7c3aed' : 'var(--border-color)';
+      });
+
+      // Destacar primeiro card
+      if (idx === 0) card.style.borderColor = '#7c3aed';
+
+      listEl.appendChild(card);
+    });
+  }
+
+  async function handleOCRFile(file, dataKey, zoneId) {
+    openOCRModal(file, dataKey, zoneId);
+
+    try {
+      // Chamar PARSER.parseFile() que delega ao OCR_ENGINE
+      const result = await PARSER.parseFile(file, handleOCRProgress);
+
+      if (!result._ocrRaw) {
+        throw new Error('Resposta inesperada do OCR.');
+      }
+
+      _ocrResult = result._ocrRaw;
+
+      // Preencher info bar
+      const totalRows = _ocrResult.tables.reduce((s, t) => s + t.rowCount, 0);
+      document.getElementById('ocr-tables-count').textContent = _ocrResult.tables.length;
+      document.getElementById('ocr-rows-count').textContent   = totalRows;
+      document.getElementById('ocr-doc-type').textContent     = _ocrResult.documentType || '—';
+
+      // Badge de confiança
+      const confBadge = document.getElementById('ocr-confidence-badge');
+      const confText  = document.getElementById('ocr-confidence-text');
+      confBadge.style.display = 'block';
+      confText.textContent    = `${_ocrResult.confidence}% confiança`;
+
+      // Status Supabase
+      const dbStatus = document.getElementById('ocr-db-status');
+      dbStatus.textContent = DB.isAvailable() ? '🟢 Supabase conectado' : '🟡 Sem Supabase (apenas memória)';
+
+      // Renderizar tabelas
+      renderOCRTables(_ocrResult);
+
+      // Mostrar resultados
+      document.getElementById('ocr-progress-area').style.display = 'none';
+      document.getElementById('ocr-results-area').style.display  = 'flex';
+
+    } catch (err) {
+      // Mostrar erro
+      document.getElementById('ocr-progress-area').style.display = 'none';
+      document.getElementById('ocr-error-area').style.display    = 'block';
+      document.getElementById('ocr-error-message').textContent   = err.message;
+    }
+  }
+
+  async function confirmOCRImport() {
+    if (!_ocrResult) return;
+
+    // Fix #2: salvar todas as variáveis de estado ANTES de fechar o modal
+    const dataKey    = _ocrCurrentDataKey;
+    const file       = _ocrCurrentFile;
+    const zoneId     = _ocrCurrentZoneId;
+    const confidence = _ocrResult.confidence;   // salvar antes do closeOCRModal()
+    const docType    = _ocrResult.documentType;
+
+    // Coletar tabelas selecionadas
+    const selectedTables = [];
+    _ocrResult.tables.forEach((table, idx) => {
+      const cb = document.getElementById(`ocr-table-check-${idx}`);
+      if (cb?.checked) selectedTables.push(table);
+    });
+
+    if (selectedTables.length === 0) {
+      APP.toast('Selecione pelo menos uma tabela para importar.', 'warning');
+      return;
+    }
+
+    // Construir resultado no formato do parser (antes de fechar)
+    const parsed = OCR_ENGINE.buildParserResult(_ocrResult, selectedTables);
+    const rowCount = parsed.rowCount;
+
+    // Fechar modal — após este ponto _ocrResult e _ocrCurrentDataKey são null
+    closeOCRModal();
+
+    // Salvar no Supabase (background, não bloqueia UI)
+    if (DB.isAvailable()) {
+      DB.saveImportedRows(parsed.normalizedRows, dataKey, {
+        fileName:   file?.name || 'ocr_doc',
+        fileType:   file?.name?.split('.').pop() || 'unknown',
+        confidence,
+        rawJson:    { documentType: docType },
+      }).then(res => {
+        if (res.success) {
+          APP.toast(`Dados salvos no Supabase! (${rowCount} registros)`, 'success');
+        } else {
+          console.warn('[DB] Não salvou no Supabase:', res.message);
+        }
+      });
+    }
+
+    // Fix #3: usar o arquivo real para mostrar tamanho correto
+    const fileInfo = file ? file : { name: 'documento_ocr.pdf', size: 0 };
+
+    // Injetar no pipeline de conciliação
+    const zone = document.getElementById(zoneId);
+    if (dataKey === 'bank') {
+      bankData = parsed;
+      showFileInfo('bank-file-info', fileInfo, rowCount);
+      zone?.classList.add('has-file');
+      updatePreview();
+    } else {
+      systemData = parsed;
+      showFileInfo('system-file-info', fileInfo, rowCount);
+      zone?.classList.add('has-file');
+      updatePreview();
+    }
+
+    checkRunButton();
+    APP.toast(
+      `📄 OCR concluído! ${rowCount} registros importados com ${confidence}% de confiança.`,
+      'success',
+      5000
+    );
+  }
+
+  // ---- Eventos do modal OCR ----
+
+  /**
+   * Fix #1: salvar dataKey/zoneId em variáveis locais ANTES de chamar
+   * closeOCRModal(), que zera _ocrCurrentDataKey e _ocrCurrentZoneId.
+   */
+  function _handleOCRCancel() {
+    const dataKey = _ocrCurrentDataKey;  // capturar antes do close
+    closeOCRModal();
+    if (dataKey === 'bank') {
+      document.getElementById('bank-file').value = '';
+    } else if (dataKey) {
+      document.getElementById('system-file').value = '';
+    }
+  }
+
+  function _handleOCRRetry() {
+    // Capturar antes, pois closeOCRModal foi chamado apenas se houve erro
+    const file    = _ocrCurrentFile;
+    const dataKey = _ocrCurrentDataKey;
+    const zoneId  = _ocrCurrentZoneId;
+    if (file && dataKey && zoneId) {
+      handleOCRFile(file, dataKey, zoneId);
+    }
+  }
+
+  document.getElementById('ocr-btn-cancel')?.addEventListener('click', _handleOCRCancel);
+  document.getElementById('ocr-btn-error-cancel')?.addEventListener('click', _handleOCRCancel);
+  document.getElementById('ocr-btn-confirm')?.addEventListener('click', confirmOCRImport);
+  document.getElementById('ocr-btn-retry')?.addEventListener('click', _handleOCRRetry);
+
+
 
   function showFileInfo(containerId, file, count) {
     const el = document.getElementById(containerId);
