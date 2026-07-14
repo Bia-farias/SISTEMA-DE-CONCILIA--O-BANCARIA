@@ -1,10 +1,3 @@
--- ================================================================
--- SCHEMA SQL – Sistema de Conciliação Bancária
--- Execute este script no painel SQL Editor do Supabase
--- Painel: https://supabase.com → seu projeto → SQL Editor
--- ================================================================
-
--- ----------------------------------------------------------------
 -- 1. Tabela de log de importações OCR
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ocr_imports (

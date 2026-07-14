@@ -10,8 +10,6 @@
  * ║                                                          ║
  * ║  2. Preencha suas chaves em js/config.js                 ║
  * ║                                                          ║
- * ║  3. NUNCA commite js/config.js no Git!                   ║
- * ║     (já está no .gitignore por segurança)                ║
  * ║                                                          ║
  * ║  Guia completo: docs/CONFIGURACAO.md                     ║
  * ╚══════════════════════════════════════════════════════════╝
@@ -26,14 +24,14 @@ const CONFIG = {
   // -------------------------------------------------------------------
   // GROQ — OCR / Leitura de documentos por IA (Llama 4 Scout)
   // -------------------------------------------------------------------
-  GROQ_API_KEY:  'gsk_COLE_SUA_CHAVE_GROQ_AQUI',
-  GROQ_MODEL:    'meta-llama/llama-4-scout-17b-16e-instruct',
+  GROQ_API_KEY: 'gsk_COLE_SUA_CHAVE_GROQ_AQUI',
+  GROQ_MODEL: 'meta-llama/llama-4-scout-17b-16e-instruct',
   GROQ_BASE_URL: 'https://api.groq.com/openai/v1/chat/completions',
 
   // -------------------------------------------------------------------
   // SUPABASE — Banco de Dados PostgreSQL
   // -------------------------------------------------------------------
-  SUPABASE_URL:      'https://SEU_PROJETO.supabase.co',
+  SUPABASE_URL: 'https://SEU_PROJETO.supabase.co',
   SUPABASE_ANON_KEY: 'COLE_SUA_ANON_KEY_AQUI',
 
   // -------------------------------------------------------------------
