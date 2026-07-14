@@ -6,6 +6,20 @@
  * Depende de: CONFIG, NORMALIZER, PDF.js (CDN)
  */
 
+// Garantir que CONFIG existe para evitar ReferenceError caso o arquivo js/config.js não tenha sido carregado/criado
+if (typeof CONFIG === 'undefined') {
+  window.CONFIG = {
+    GROQ_API_KEY: '',
+    GROQ_MODEL: 'meta-llama/llama-4-scout-17b-16e-instruct',
+    GROQ_BASE_URL: 'https://api.groq.com/openai/v1/chat/completions',
+    SUPABASE_URL: '',
+    SUPABASE_ANON_KEY: '',
+    OCR_MAX_PDF_PAGES: 10,
+    OCR_MAX_IMAGE_SIZE: 4 * 1024 * 1024,
+    PDF_RENDER_SCALE: 2.0
+  };
+}
+
 const OCR_ENGINE = (() => {
 
   // ----------------------------------------------------------------
